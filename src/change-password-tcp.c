@@ -13,7 +13,22 @@ void error(const char *msg){
 	perror(msg);
 	exit(1);
 }
-
+// a subroutine to read data from standard input
+// and send out through socket 
+/*
+void rdnsd(int *sfd, char *buf){
+	if(scanf("%s", buf)<0){
+		error("scanf");
+	}
+	buf[strlen(buf)] = '\0';
+	int sent_len = send(*sfd, buf, strlen(buf), 0);
+	if(sent_len<0){
+		error("send::");
+	}
+	printf("length of buf is %zu\n", strlen(buf));
+	printf("%d bytes of string \"%s\" has been sent.\n", sent_len, buf);
+}
+*/
 int main (int argc, char *argv[])
 {
 	int status, sockfd;
@@ -61,15 +76,25 @@ int main (int argc, char *argv[])
 	}
 	printf("Client connects to local address and port number.\n");
 
+	/*
+	printf("Please enter username:\n");
+	rdnsd(&sockfd, buffer);
+	printf("Please enter current password:\n");
+	rdnsd(&sockfd, buffer);
+	printf("Please enter the new password:\n");
+	rdnsd(&sockfd, buffer);
+	*/
 	printf("Please enter username, your old password and the new password:\n");
-	while(scanf("%s", buffer)){
-		buffer[BUF_SIZE-1] = '\0';
-		int sent_len = send(sockfd, buffer, sizeof(buffer), 0);
-		if(sent_len < 0){
-			error("message emission failed.");
-		}
-		printf("%d bytes of string \"%s\" has been sent.\n", sent_len, buffer);
+	if(fgets(buffer, 256, stdin)<0){
+		error("scanf::");
 	}
-
+	buffer[strlen(buffer)-1] = '\0';
+	int sent_len = send(sockfd, buffer, strlen(buffer), 0);
+	if(sent_len < 0){
+		error("send::");
+	}
+	printf("%d bytes of string \"%s\" has been sent.\n", sent_len, buffer);
 	
+
+	return 0;
 }

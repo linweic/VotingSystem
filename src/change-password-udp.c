@@ -15,7 +15,7 @@ void error(const char *msg){
 }
 void sendpkg(int *sfd, char *buf, struct addrinfo *dist){
 	if(scanf("%s", buf)<0){
-		error("Failed to read input.");
+		error("scanf:");
 	}
 	printf("read input successfully.\n");
 	int sent_len = sendto(*sfd, buf, BUF_SIZE, 0, 

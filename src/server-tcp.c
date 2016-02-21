@@ -88,9 +88,9 @@ int main (int argc, char *argv[])
 		else if(recv_len == 0){
 			printf("The remote socket has closed connection on you.\n");
 		}
-		//do stuff
-
-
+		buffer[recv_len] = '\0';
+		printf("\"%s\" receieved, length: %d\n", buffer, recv_len);
+		
 		close(new_sockfd);
 	}
 	close(sockfd);

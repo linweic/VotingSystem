@@ -5,8 +5,9 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <netdb.h>
 
-#define BUF_SIZE 256;
+#define BUF_SIZE 256
 
 void error(const char *msg){
 	perror(msg);
@@ -35,13 +36,13 @@ int main (int argc, char *argv[])
 	hints.ai_family = AF_UNSPEC; //don't care ipv4 or ipv6
 	hints.ai_socktype = SOCK_STREAM; //TCP socket type
 	hints.ai_flags = AI_PASSIVE; //wildcard IP address
-	hint.ai_protocol = 0; //any protocol
+	hints.ai_protocol = 0; //any protocol
 
 	if ((status = getaddrinfo(serv_addr, port_num, &hints, &servinfo))!= 0){
 		error(gai_strerror(status));
 	}
 
-	for(res = servinfo; res != null; res = res->ai_next){
+	for(res = servinfo; res != NULL; res = res->ai_next){
 		if((sockfd = socket(PF_INET, res->ai_socktype, res->ai_protocol))<0){
 			error("simplex-talk: socket");
 		}
@@ -54,7 +55,7 @@ int main (int argc, char *argv[])
 	}
 	freeaddrinfo(servinfo); //finish checking the linked list returned from getaddrinfo()
 	
-	if(res == null){
+	if(res == NULL){
 		fprintf(stderr, "client: failed to connect.\n");
 		exit(1);
 	}
@@ -69,6 +70,6 @@ int main (int argc, char *argv[])
 		}
 		printf("%d bytes of string \"%s\" has been sent.\n", sent_len, buffer);
 	}
-	
+
 	
 }

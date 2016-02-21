@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <netdb.h>
 
 #define PORTNUM "6106"
 #define MAX_PENDING 5
@@ -36,18 +37,18 @@ int main (int argc, char *argv[])
 	}
 
 	//reset and fill in hints
-	memset(&hints, 0, sizeof(hints));
+	memset(&hints, 0, sizeof(struct addrinfo));
 	hints.ai_family = AF_UNSPEC; //don't care ipv4 or ipv6
 	hints.ai_socktype = SOCK_STREAM; //TCP socket type
 	hints.ai_flags = AI_PASSIVE; //wildcard IP address
-	hint.ai_protocol = 0; //any protocol
+	hints.ai_protocol = 0; //any protocol
 
 	if ((status = getaddrinfo(NULL, PORTNUM, &hints, &servinfo))!= 0){
 		perror(gai_strerror(status));
 		exit(1);
 	}
 
-	for(res = servinfo; res != null; res = res->ai_next){
+	for(res = servinfo; res != NULL; res = res->ai_next){
 		if((sockfd = socket(PF_INET, res->ai_socktype, res->ai_protocol))<0){
 			perror("simplex-talk: socket");
 			exit(1);
@@ -61,7 +62,7 @@ int main (int argc, char *argv[])
 	}
 	freeaddrinfo(servinfo); //finish checking the linked list returned from getaddrinfo()
 
-	if(res == null){
+	if(res == NULL){
 		fprintf(stderr, "server: failed to bind.\n");
 		exit(1);
 	}
@@ -72,10 +73,10 @@ int main (int argc, char *argv[])
 	printf("listening on requests to arrive...\n");
 
 	while(1){
-		addr_size = sizeof incoming_addr;
-		if((new_sockfd = accept(sockfd, (struct sockaddr *) &incoming_addr, &addr_size)<0){
+		addr_size = sizeof(incoming_addr);
+		if((new_sockfd = accept(sockfd, (struct sockaddr *) &incoming_addr, &addr_size))<0){
 			perror("simplex-talk: accept");
-			continue
+			continue;
 		}
 		printf("request accepted.\n");
 
@@ -94,3 +95,4 @@ int main (int argc, char *argv[])
 	}
 	close(sockfd);
 	return 0;
+}

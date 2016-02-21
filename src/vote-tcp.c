@@ -11,14 +11,29 @@
 #define PORTNUM "6106"
 #define MAX_PENDING 5
 
+#define BUF_SIZE 256;
+
+void error(const char *msg){
+	perror(msg);
+	exit(1);
+}
+
 int main (int argc, char *argv[])
 {
-	int status, sockfd, new_sockfd, recv_len;
+	int status, sockfd;
 	struct addrinfo hints;
 	struct addrinfo *servinfo, *res;
-	struct sockaddr_storage incoming_addr;
-	socklen_t addr_size;
-	char buffer[256];
+	char buffer[BUF_SIZE],username[BUF_SIZE], pwd[BUF_SIZE], new_pwd[BUF_SIZE];
+
+	if(argc != 3){
+		fprintf(stderr, "Argument mis-match.\n");
+		exit(1);
+	}
+
+	char *serv_addr = argv[1];
+	char *port_num = argv[2];
+	printf("server address is: %s\n", serv_addr);
+	printf("port number is: %s\n", port_num);
 
 	//reset and fill in hints
 	memset(&hints, 0, sizeof(hints));
@@ -27,56 +42,27 @@ int main (int argc, char *argv[])
 	hints.ai_flags = AI_PASSIVE; //wildcard IP address
 	hint.ai_protocol = 0; //any protocol
 
-	if ((status = getaddrinfo(NULL, PORTNUM, &hints, &servinfo))!= 0){
-		perror(gai_strerror(status));
-		exit(1);
+	if ((status = getaddrinfo(serv_addr, port_num, &hints, &servinfo))!= 0){
+		error(gai_strerror(status));
 	}
 
 	for(res = servinfo; res != null; res = res->ai_next){
 		if((sockfd = socket(PF_INET, res->ai_socktype, res->ai_protocol))<0){
-			perror("simplex-talk: socket");
-			exit(1);
+			error("simplex-talk: socket");
 		}
-		if(bind(sockfd, res->ai_addr, res->ai_addrlen) < 0){
+		if(connect(sockfd, res->ai_addr, res->ai_addrlen) < 0){
 			close(sockfd);			
-			perror("simplex-talk: bind");
+			perror("simplex-talk: connect");
 			continue;
 		}
-		break; //when the bind succeeds for the first time, exit the loop
+		break; //when the connect succeeds for the first time, exit the loop
 	}
 	freeaddrinfo(servinfo); //finish checking the linked list returned from getaddrinfo()
-
+	
 	if(res == null){
-		fprintf(stderr, "failed to bind.\n");
+		fprintf(stderr, "client: failed to connect.\n");
 		exit(1);
 	}
-	printf("socket binded to local address and port number.\n");
-
-	//Server blocks and wait for requests to arrive
-	listen(sockfd, MAX_PENDING);
-	printf("listening on requests to arrive...\n");
-
-	while(1){
-		addr_size = sizeof incoming_addr;
-		if((new_sockfd = accept(sockfd, (struct sockaddr *) &incoming_addr, &addr_size)<0){
-			perror("simplex-talk: accept");
-			continue
-		}
-		printf("request accepted.\n");
-
-		recv_len = recv(new_sockfd, buffer, sizeof(buffer), 0);
-		if(recv_len <0){
-			perror("error reading from socket");
-			exit(1);
-		}
-		else if(recv_len == 0){
-			printf("The remote socket has closed connection on you.\n");
-		}
-		//do stuff
-
-
-		close(new_sockfd);
-	}
-	close(sockfd);
-	return 0;
+	printf("Client connects to local address and port number.\n");
+	
 }

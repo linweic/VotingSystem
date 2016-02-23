@@ -16,9 +16,9 @@
 //helper methods
 void check_recv(int, char *);
 void check_send(int);
-
+void send_resp(int *, char *, int);
 //functions
-void changepassword(char *);
+char *changepassword(char *, char *, char*);
 void zeroize();
 void addvoter(int voterid);
 void votefor(char *, int);
@@ -28,22 +28,22 @@ void viewresult(char *, char *);
 
 int main (int argc, char *argv[])
 {
-	int status, sockfd, new_sockfd, recv_len, send_len;
+	int status, sockfd, new_sockfd, recv_len;
 	struct addrinfo hints;
 	struct addrinfo *servinfo, *res;
 	struct sockaddr_storage incoming_addr;
 	socklen_t addr_size;
-	char buffer[BUF_SIZE];
+	char buffer[BUF_SIZE], response[BUF_SIZE];
 
-	char *username, *pwd;
+	char username[BUF_SIZE], pwd[BUF_SIZE];
 	//set up username and password
 	if(argc == 1){
-		username = "cis505";
-		pwd = "project2";
+		strcpy(username,"cis505");
+		strcpy(pwd, "project2");
 	}
 	else if (argc == 3){
-		username = argv[1];
-		pwd = argv[2];
+		strcpy(username, argv[1]);
+		strcpy(pwd, argv[2]);
 	}
 	else{
 		fprintf(stderr,"Argument mis-match.");
@@ -105,11 +105,9 @@ int main (int argc, char *argv[])
 				recv_len =recv(new_sockfd, buffer, BUF_SIZE, 0);
 				check_recv(recv_len, buffer);
 				printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
-
-				strcpy(buffer, "OK");
-				send_len = send(new_sockfd, buffer, strlen(buffer), 0);
-				check_send(send_len);
-				printf("\"%s\" has been sent to client, length: %d\n", buffer, send_len);
+				strcpy(response, changepassword(buffer, username, pwd));
+				send_resp(&new_sockfd, response, strlen(response));
+				printf("current password is \"%s\"\n", pwd);
 				break;
 				//send(new_sockfd, "OK", strlen("OK"), 0);
 			case '2':
@@ -162,5 +160,39 @@ void check_send(int len){
 	if(len < 0){
 		perror("send::");
 		exit(1);
+	}
+}
+void send_resp(int *sockfd, char *response, int len){
+	int send_len = send( *sockfd, response, len, 0);
+	check_send(send_len);
+	printf("\"%s\" has been sent to client, length: %d\n", response, send_len);
+}
+
+char *changepassword(char *buffer, char *username, char *password){
+	char delim[] = " ";
+	char * token;
+	//parse username
+	token = strtok(buffer, delim);
+	if(token == NULL) return "FALSE";
+	//compare username
+	printf("[DEBUG]token_1 is \"%s\"\n", token);
+	int usr_cmp = strcmp(username, token);
+	//parse password
+	token = strtok(NULL, delim);
+	if(token == NULL) return "FALSE";
+	//compare password
+	printf("[DEBUG]token_2 is \"%s\"\n", token);
+	int pwd_cmp = strcmp(password, token);
+	if(usr_cmp == 0 && pwd_cmp == 0){
+		//client provides a matching pair of username and password
+		//so update password
+		token = strtok(NULL, delim);
+		if(token == NULL) return "FALSE: Please provide a new password.";
+		printf("[DEBUG]token_3 is \"%s\"\n", token);
+		strcpy(password, token);
+		return "OK";
+	}
+	else{
+		return "FALSE: your username or password is not correct.";
 	}
 }

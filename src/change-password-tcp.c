@@ -8,33 +8,17 @@
 #include <netdb.h>
 
 #define BUF_SIZE 256
+#define ID "1"
 
-void error(const char *msg){
-	perror(msg);
-	exit(1);
-}
-// a subroutine to read data from standard input
-// and send out through socket 
-/*
-void rdnsd(int *sfd, char *buf){
-	if(scanf("%s", buf)<0){
-		error("scanf");
-	}
-	buf[strlen(buf)] = '\0';
-	int sent_len = send(*sfd, buf, strlen(buf), 0);
-	if(sent_len<0){
-		error("send::");
-	}
-	printf("length of buf is %zu\n", strlen(buf));
-	printf("%d bytes of string \"%s\" has been sent.\n", sent_len, buf);
-}
-*/
+void error(const char *);
+void check_recv(int, char *);
+
 int main (int argc, char *argv[])
 {
-	int status, sockfd;
+	int status, sockfd, send_len, recv_len;
 	struct addrinfo hints;
 	struct addrinfo *servinfo, *res;
-	char buffer[BUF_SIZE],username[BUF_SIZE], pwd[BUF_SIZE], new_pwd[BUF_SIZE];
+	char buffer[BUF_SIZE],msg[] = ID;
 
 	if(argc != 3){
 		fprintf(stderr, "Argument mis-match.\n");
@@ -76,25 +60,44 @@ int main (int argc, char *argv[])
 	}
 	printf("Client connects to local address and port number.\n");
 
-	/*
-	printf("Please enter username:\n");
-	rdnsd(&sockfd, buffer);
-	printf("Please enter current password:\n");
-	rdnsd(&sockfd, buffer);
-	printf("Please enter the new password:\n");
-	rdnsd(&sockfd, buffer);
-	*/
 	printf("Please enter username, your old password and the new password:\n");
 	if(fgets(buffer, 256, stdin)<0){
 		error("scanf::");
 	}
 	buffer[strlen(buffer)-1] = '\0';
-	int sent_len = send(sockfd, buffer, strlen(buffer), 0);
-	if(sent_len < 0){
+	
+	//send identifier first
+	send_len = send(sockfd, msg, strlen(msg), 0);
+	if(send_len < 0){
+		error("send identifier ::");
+	}
+	printf("\"%s\" has been sent, length: %d\n", msg, send_len );
+	
+	//send data body next
+	send_len = send(sockfd, buffer, strlen(buffer), 0);
+	if(send_len < 0){
 		error("send::");
 	}
-	printf("%d bytes of string \"%s\" has been sent.\n", sent_len, buffer);
+	printf("\"%s\" has been sent, length: %d\n", buffer, send_len);
 	
+	//receieve response from server
+	recv_len = recv(sockfd, buffer, BUF_SIZE, 0);
+	check_recv(recv_len, buffer);
+	printf("\"%s\" receieved from server, length: %d\n", buffer, recv_len);
 
 	return 0;
+}
+
+void error(const char *msg){
+	perror(msg);
+	exit(1);
+}
+void check_recv(int len, char *buffer){
+	if(len <0){
+		error("receieve ::");
+	}
+	else if(len == 0){
+		printf("The remote socket has closed connection on you.\n");
+	}
+	buffer[len] = '\0';
 }

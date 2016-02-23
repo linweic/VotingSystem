@@ -13,6 +13,7 @@ void error(const char *msg){
 	perror(msg);
 	exit(1);
 }
+/*
 void sendpkg(int *sfd, char *buf, struct addrinfo *dist){
 	if(scanf("%s", buf)<0){
 		error("scanf:");
@@ -25,7 +26,7 @@ void sendpkg(int *sfd, char *buf, struct addrinfo *dist){
 	}
 	printf("%d bytes of \"%s\" have been sent", sent_len, buf);
 }
-
+*/
 int main (int argc, char *argv[])
 {
 	int status, sockfd;
@@ -46,7 +47,7 @@ int main (int argc, char *argv[])
 	//reset and fill in hints
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_UNSPEC; //don't care ipv4 or ipv6
-	hints.ai_socktype = SOCK_STREAM; //TCP socket type
+	hints.ai_socktype = SOCK_DGRAM; //TCP socket type
 	hints.ai_flags = AI_PASSIVE; //wildcard IP address
 	hints.ai_protocol = 0; //any protocol
 
@@ -68,13 +69,27 @@ int main (int argc, char *argv[])
 	}
 	freeaddrinfo(servinfo); //finish checking the linked list returned from getaddrinfo()
 	printf("Socket created.\n");
-
+	/*
 	printf("Please enter username:\n");
 	sendpkg(&sockfd, buffer, res);
 	printf("Please enter current password:\n");
 	sendpkg(&sockfd, buffer, res);
 	printf("Please enter the new password:\n");
 	sendpkg(&sockfd, buffer, res);
-
+	*/
+	printf("Please enter username, your old password and the new password:\n");
+	if(fgets(buffer, 256, stdin)<0){
+		error("scanf::");
+	}
+	buffer[strlen(buffer)-1] = '\0';
+	//send an identifier first
+	
+	//send real message
+	int sent_len = sendto(sockfd, buffer, strlen(buffer), 0, 
+		res->ai_addr, res->ai_addrlen);
+	if(sent_len < 0){
+		error("Failed to send package.");
+	}
+	printf("%d bytes of \"%s\" have been sent\n", sent_len, buffer);
 	return 0;
 }

@@ -65,11 +65,11 @@ int main (int argc, char *argv[])
 		fprintf(stderr, "server: failed to bind.\n");
 		exit(1);
 	}
-	freeaddrinfo(servinfo); //finish checking the linked list returned from getaddrinfo()
+	//freeaddrinfo(servinfo); //finish checking the linked list returned from getaddrinfo()
 	printf("Socket binded to local address and port number.\n");
 
 	while(1){
-		printf("Waiting for requests from clients...");
+		printf("Waiting for requests from clients...\n");
 		addr_size = sizeof(incoming_addr);
 		recv_len = recvfrom(sockfd, buffer, BUF_SIZE, 0, (struct sockaddr *) &incoming_addr, &addr_size);
 		if(recv_len <0){
@@ -79,7 +79,8 @@ int main (int argc, char *argv[])
 		else if(recv_len == 0){
 			printf("The remote socket has closed connection on you.\n");
 		}
-		printf("Request package received.");
+		buffer[recv_len] = '\0';
+		printf("\"%s\" receieved, length: %d\n", buffer, recv_len);
 		
 	}
 	close(sockfd);

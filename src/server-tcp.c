@@ -11,15 +11,29 @@
 
 #define PORTNUM "6106"
 #define MAX_PENDING 5
+#define BUF_SIZE 256
+
+//helper methods
+void check_recv(int, char *);
+void check_send(int);
+
+//functions
+void changepassword(char *);
+void zeroize();
+void addvoter(int voterid);
+void votefor(char *, int);
+void listcandidates();
+void votecount(char *);
+void viewresult(char *, char *);
 
 int main (int argc, char *argv[])
 {
-	int status, sockfd, new_sockfd, recv_len;
+	int status, sockfd, new_sockfd, recv_len, send_len;
 	struct addrinfo hints;
 	struct addrinfo *servinfo, *res;
 	struct sockaddr_storage incoming_addr;
 	socklen_t addr_size;
-	char buffer[256];
+	char buffer[BUF_SIZE];
 
 	char *username, *pwd;
 	//set up username and password
@@ -80,19 +94,73 @@ int main (int argc, char *argv[])
 		}
 		printf("request accepted.\n");
 
-		recv_len = recv(new_sockfd, buffer, sizeof(buffer), 0);
-		if(recv_len <0){
-			perror("error reading from socket");
-			exit(1);
-		}
-		else if(recv_len == 0){
-			printf("The remote socket has closed connection on you.\n");
-		}
-		buffer[recv_len] = '\0';
-		printf("\"%s\" receieved, length: %d\n", buffer, recv_len);
+		/*first receieve the identifier*/
+		recv_len = recv(new_sockfd, buffer, 1, 0);
+		check_recv(recv_len, buffer);
+		printf("\"%c\" receieved, length: %d\n", buffer[0], recv_len);
 		
+		switch(buffer[0]){
+			case '1':
+				printf("invoke change-password method\n");
+				recv_len =recv(new_sockfd, buffer, BUF_SIZE, 0);
+				check_recv(recv_len, buffer);
+				printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
+
+				strcpy(buffer, "OK");
+				send_len = send(new_sockfd, buffer, strlen(buffer), 0);
+				check_send(send_len);
+				printf("\"%s\" has been sent to client, length: %d\n", buffer, send_len);
+				break;
+				//send(new_sockfd, "OK", strlen("OK"), 0);
+			case '2':
+				printf("invoke zeroize\n");
+
+				break;
+			case '3':
+				printf("invoke addvoter\n");
+
+				break;
+			case '4':
+				printf("invoke votefor\n");
+
+				break;
+			case '5':
+				printf("invoke listcandidates\n");
+				
+				break;
+			case '6':
+				printf("invoke votecount\n");
+
+				break;
+			case '7':
+				printf("invoke viewresult\n");
+
+				break;
+			default:
+				printf("illegal identifier.\n");
+				send(new_sockfd, "ILLEGAL", strlen("ILLEGAL"), 0);
+				break;
+		}
+
 		close(new_sockfd);
 	}
 	close(sockfd);
 	return 0;
+}
+
+void check_recv(int len, char *buffer){
+	if(len <0){
+		perror("receieve ::");
+		exit(1);
+	}
+	else if(len == 0){
+		printf("The remote socket has closed connection on you.\n");
+	}
+	buffer[len] = '\0';
+}
+void check_send(int len){
+	if(len < 0){
+		perror("send::");
+		exit(1);
+	}
 }

@@ -17,14 +17,31 @@
 void check_recv(int, char *);
 void check_send(int);
 void send_resp(int *, char *, int);
+struct Voter *search_voter(struct Voter **, int id)
+
 //functions
 char *changepassword(char *, char *, char*);
-void zeroize();
-void addvoter(int voterid);
-void votefor(char *, int);
-void listcandidates();
-void votecount(char *);
-void viewresult(char *, char *);
+char *zeroize(int *, struct Voter **, struct Candidate **);
+char *addvoter(char *, struct Voter **, int *);
+char *votefor(char *, struct Voter **, struct Candidate **);
+char *listcandidates();
+char *votecount(char *);
+char *viewresult(char *, char *);
+
+struct Candidate {
+   char  name[BUF_SIZE];
+   int   votes;
+};
+
+struct Voter{
+	int id;
+	short voted; //0 means not voted yet, 1 mean already voted
+};
+
+int voter_count;
+struct Candidate *candi_list[BUF_SIZE]; //a list of struct Candidate pointers
+										//referring to candidate variables 
+struct Voter *voter_list[BUF_SIZE];
 
 int main (int argc, char *argv[])
 {
@@ -34,9 +51,9 @@ int main (int argc, char *argv[])
 	struct sockaddr_storage incoming_addr;
 	socklen_t addr_size;
 	char buffer[BUF_SIZE], response[BUF_SIZE];
-
 	char username[BUF_SIZE], pwd[BUF_SIZE];
-	//set up username and password
+
+	//set up default username and password
 	if(argc == 1){
 		strcpy(username,"cis505");
 		strcpy(pwd, "project2");
@@ -112,31 +129,62 @@ int main (int argc, char *argv[])
 				//send(new_sockfd, "OK", strlen("OK"), 0);
 			case '2':
 				printf("invoke zeroize\n");
+				recv_len = recv(new_sockfd, buffer, BUF_SIZE, 0);
+				check_recv(recv_len, buffer);
+				printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
+				strcpy(response, &voter_count, zeroize(voter_list, candi_list));
+				send_resp(&new_sockfd, response, strlen(response));
 
 				break;
 			case '3':
 				printf("invoke addvoter\n");
-
+				recv_len = recv(new_sockfd, buffer, BUF_SIZE, 0);
+				check_recv(recv_len, buffer);
+				printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
+				strcpy(response, addvoter(buffer, voter_list, &voter_count));
+				send_resp(&new_sockfd, response, strlen(response));
+				
 				break;
 			case '4':
 				printf("invoke votefor\n");
-
+				recv_len = recv(new_sockfd, buffer, BUF_SIZE, 0);
+				check_recv(recv_len, buffer);
+				printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
+				strcpy(response, votefor(buffer, voter_list, candi_list));
+				send_resp(&new_sockfd, response, strlen(response));
+				
 				break;
 			case '5':
 				printf("invoke listcandidates\n");
-				
+				recv_len = recv(new_sockfd, buffer, BUF_SIZE, 0);
+				check_recv(recv_len, buffer);
+				printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
+				strcpy(response,      );
+				send_resp(&new_sockfd, response, strlen(response));
+								
 				break;
 			case '6':
 				printf("invoke votecount\n");
-
+				recv_len = recv(new_sockfd, buffer, BUF_SIZE, 0);
+				check_recv(recv_len, buffer);
+				printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
+				strcpy(response,      );
+				send_resp(&new_sockfd, response, strlen(response));
+				
 				break;
 			case '7':
 				printf("invoke viewresult\n");
-
+				recv_len = recv(new_sockfd, buffer, BUF_SIZE, 0);
+				check_recv(recv_len, buffer);
+				printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
+				strcpy(response,      );
+				send_resp(&new_sockfd, response, strlen(response));
+				
 				break;
 			default:
 				printf("illegal identifier.\n");
-				send(new_sockfd, "ILLEGAL", strlen("ILLEGAL"), 0);
+				strcpy(response, "illegal identifier")
+				send_resp(&new_sockfd, response, strlen(response));
 				break;
 		}
 
@@ -167,6 +215,13 @@ void send_resp(int *sockfd, char *response, int len){
 	check_send(send_len);
 	printf("\"%s\" has been sent to client, length: %d\n", response, send_len);
 }
+struct Voter *search_voter(struct Voter **vlist, int id){
+	struct Voter **vptr;
+	for(vptr = vlist; *vptr; vptr++){
+		if(id == (*vptr)->id) return *vptr;
+	}
+	return NULL;
+}
 
 char *changepassword(char *buffer, char *username, char *password){
 	char delim[] = " ";
@@ -195,4 +250,72 @@ char *changepassword(char *buffer, char *username, char *password){
 	else{
 		return "FALSE: your username or password is not correct.";
 	}
+}
+
+char *zeroize(int *count, struct Voter **vlist, struct Candidate **clist){
+	//clear voteid array
+	struct Voter **vptr;
+	for(vptr = vlist; *vptr; vptr++){
+		*vptr = NULL;
+	}
+	*count = 0;
+	//clear candidate array
+	struct Candidate **cptr;
+	for(cptr = clist; *cptr; cptr++){
+		*cptr = NULL;
+	}
+	return "TRUE";
+}
+
+char *addvoter(char *buffer, struct Voter **vlist, int *count){
+	if((*count) > BUF_SIZE || (*count) == BUF_SIZE){
+		return "ERROR: voters overflow.";
+	}
+	int id = atoi(buffer);
+	if(id == 0) return "ERROR: invalid voter id.";
+
+	if(search_voter(vlist, id)!= NULL) return "EXISTS";
+	//TO DO: add new voter, set voted as 0
+
+	//increment count
+	return "OK";
+}
+
+char *votefor(char *buffer, struct Voter **vlist, struct Candidate **clist){
+	char delim[] = " ";
+	char *token;
+	char *name;
+	int id;
+	//parse candidate name
+	token = strtok(buffer, delim);
+	if(token == NULL) return "ERROR";
+	printf("[DEBUG]token_1 is \"%s\"\n", token);
+	strcpy(name, token);
+
+	//parse voterid
+	token = strtok(NULL, delim);
+	if(token == NULL) return "ERROR";
+	printf("[DEBUG]token_2 is \"%s\"\n", token);
+	id = atoi(token);
+	if(id == 0) return "ERROR: invalid voter id.";
+
+	//check if voter id exists
+	struct Voter *voter = search_voter(vlist, id);
+	if(voter == NULL) return  "NOTAVOTER";
+	else if((voter->voted) == 1) return "ALREADYVOTED";
+
+	//voter exists and have not voted yet
+	struct Candidate **ptr;
+	for(ptr = clist; *ptr; ptr++){
+		int cmp = strcmp(name, (*ptr)->name);
+		if(cmp == 0){
+			//candidate's name already exists, increment votes
+			((*ptr)-> votes) += 1;
+			return "EXISTS";
+		}
+	}
+	//TO DO: add new candidate, set votes as 1
+
+	voter->voted = 1;
+	return "NEW";
 }

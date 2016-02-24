@@ -319,3 +319,4 @@ char *votefor(char *buffer, struct Voter **vlist, struct Candidate **clist){
 	voter->voted = 1;
 	return "NEW";
 }
+@@@

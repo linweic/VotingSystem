@@ -193,12 +193,15 @@ int main (int argc, char *argv[])
 				send_resp(&new_sockfd, response, strlen(response));
 				break;
 		}
-
 		close(new_sockfd);
 	}
 	close(sockfd);
 	deleCanList(&chead);
 	deleVoList(&vhead);
+	//free(buffer);
+	//free(response);
+	//free(username);
+	//free(pwd);
 	return 0;
 }
 
@@ -298,13 +301,14 @@ void bubble(struct Candidate **head_ref, struct Candidate *candidate){
 			//find the node previous to candidate
 			prev = prev->next;
 		}
-		exchange(cur, prev, "HEAD");
+		exchange(*head_ref, prev, "HEAD");
 	}
 
 }
 void exchange(struct Candidate *cur, struct Candidate *prev, char* signal){
 	if(strcmp(signal, "NOTHEAD")){
 		//exchange cur->next with prev->next
+		printf("exchange %s with %s\n", cur->next->name, prev->next->name);
 		struct Candidate *ptr = cur->next;
 		struct Candidate *candi = prev->next;
 		if(cur->next == prev){
@@ -322,6 +326,7 @@ void exchange(struct Candidate *cur, struct Candidate *prev, char* signal){
 	}
 	else{
 		//exchange cur with prev->next
+		printf("exchange %s with %s\n", cur->name, prev->next->name);
 		struct Candidate *candi = prev->next;
 		if(cur == prev){
 			cur->next = candi->next;
@@ -370,7 +375,7 @@ char *find_max(struct Candidate** head_ref){
 		else break;
 	}
 	if(count > 1){
-		strcpy(role, "tie:");
+		role = "tie:";
 		strcat(role, list);
 	}
 	else{
@@ -484,6 +489,7 @@ char *votefor(char *buffer, struct Voter **vhead_ref, struct Candidate **chead_r
 	return "NEW";
 }
 void listcandidates(struct Candidate *head, char *response){
+	*response = '\0';
 	while(head != NULL){
 		strcat(response, head -> name);
 		strcat(response, "\n");
@@ -515,6 +521,7 @@ char *viewresult(char *buffer, struct Candidate** head_ref, char* username, char
 	        sprintf(line, "%s\t%d\n", cur->name, cur->votes);
 	        strcat(result,line);
 	        cur = cur->next;
+			free(line);
 	    }
 		return result;	
 	}

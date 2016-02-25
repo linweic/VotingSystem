@@ -13,21 +13,6 @@
 #define MAX_PENDING 5
 #define BUF_SIZE 256
 
-//helper methods
-void check_recv(int, char *);
-void check_send(int);
-void send_resp(int *, char *, int);
-struct Voter *search_voter(struct Voter **, int id)
-
-//functions
-char *changepassword(char *, char *, char*);
-char *zeroize(int *, struct Voter **, struct Candidate **);
-char *addvoter(char *, struct Voter **, int *);
-char *votefor(char *, struct Voter **, struct Candidate **);
-char *listcandidates();
-char *votecount(char *);
-char *viewresult(char *, char *);
-
 struct Candidate {
    char  name[BUF_SIZE];
    int   votes;
@@ -37,6 +22,23 @@ struct Voter{
 	int id;
 	short voted; //0 means not voted yet, 1 mean already voted
 };
+
+//helper methods
+void check_recv(int, char *);
+void check_send(int);
+void send_resp(int *, char *, int);
+void printvoters(struct Voter**);
+void printcandidates(struct Candidate**);
+struct Voter *search_voter(struct Voter **, int id);
+
+//functions
+char *changepassword(char *, char *, char*);
+char *zeroize(struct Voter **, struct Candidate **);
+char *addvoter(char *, struct Voter **, int *, struct Voter **);
+char *votefor(char *, struct Voter **, struct Candidate **);
+char *listcandidates();
+char *votecount(char *);
+char *viewresult(char *, char *);
 
 int voter_count;
 struct Candidate *candi_list[BUF_SIZE]; //a list of struct Candidate pointers
@@ -129,10 +131,11 @@ int main (int argc, char *argv[])
 				//send(new_sockfd, "OK", strlen("OK"), 0);
 			case '2':
 				printf("invoke zeroize\n");
-				recv_len = recv(new_sockfd, buffer, BUF_SIZE, 0);
-				check_recv(recv_len, buffer);
-				printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
-				strcpy(response, &voter_count, zeroize(voter_list, candi_list));
+				//recv_len = recv(new_sockfd, buffer, BUF_SIZE, 0);
+				//check_recv(recv_len, buffer);
+				//printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
+				strcpy(response, zeroize(voter_list, candi_list));
+				voter_count = 0;
 				send_resp(&new_sockfd, response, strlen(response));
 
 				break;
@@ -141,9 +144,9 @@ int main (int argc, char *argv[])
 				recv_len = recv(new_sockfd, buffer, BUF_SIZE, 0);
 				check_recv(recv_len, buffer);
 				printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
-				strcpy(response, addvoter(buffer, voter_list, &voter_count));
+				strcpy(response, addvoter(buffer, voter_list, &voter_count, voter_list+voter_count));
 				send_resp(&new_sockfd, response, strlen(response));
-				
+				printvoters(voter_list);
 				break;
 			case '4':
 				printf("invoke votefor\n");
@@ -152,14 +155,15 @@ int main (int argc, char *argv[])
 				printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
 				strcpy(response, votefor(buffer, voter_list, candi_list));
 				send_resp(&new_sockfd, response, strlen(response));
-				
+				printvoters(voter_list);
+				printcandidates(candi_list);
 				break;
 			case '5':
 				printf("invoke listcandidates\n");
 				recv_len = recv(new_sockfd, buffer, BUF_SIZE, 0);
 				check_recv(recv_len, buffer);
 				printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
-				strcpy(response,      );
+				//strcpy(response,      );
 				send_resp(&new_sockfd, response, strlen(response));
 								
 				break;
@@ -168,7 +172,7 @@ int main (int argc, char *argv[])
 				recv_len = recv(new_sockfd, buffer, BUF_SIZE, 0);
 				check_recv(recv_len, buffer);
 				printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
-				strcpy(response,      );
+				//strcpy(response,      );
 				send_resp(&new_sockfd, response, strlen(response));
 				
 				break;
@@ -177,13 +181,13 @@ int main (int argc, char *argv[])
 				recv_len = recv(new_sockfd, buffer, BUF_SIZE, 0);
 				check_recv(recv_len, buffer);
 				printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
-				strcpy(response,      );
+				//strcpy(response,      );
 				send_resp(&new_sockfd, response, strlen(response));
 				
 				break;
 			default:
 				printf("illegal identifier.\n");
-				strcpy(response, "illegal identifier")
+				strcpy(response, "illegal identifier");
 				send_resp(&new_sockfd, response, strlen(response));
 				break;
 		}
@@ -214,6 +218,18 @@ void send_resp(int *sockfd, char *response, int len){
 	int send_len = send( *sockfd, response, len, 0);
 	check_send(send_len);
 	printf("\"%s\" has been sent to client, length: %d\n", response, send_len);
+}
+void printvoters(struct Voter **vlist){
+	struct Voter **vptr;
+	for(vptr = vlist; *vptr; vptr++){
+		printf("Voter%d, voted:%d\n", (*vptr)->id, (*vptr)->voted);
+	}
+}
+void printcandidates(struct Candidate **clist){
+	struct Candidate **cptr;
+	for(cptr = clist; *cptr; cptr++){
+		printf("Candidate: %s, votes:%d\n", (*cptr)->name, (*cptr)->votes);
+	}
 }
 struct Voter *search_voter(struct Voter **vlist, int id){
 	struct Voter **vptr;
@@ -252,13 +268,12 @@ char *changepassword(char *buffer, char *username, char *password){
 	}
 }
 
-char *zeroize(int *count, struct Voter **vlist, struct Candidate **clist){
+char *zeroize(struct Voter **vlist, struct Candidate **clist){
 	//clear voteid array
 	struct Voter **vptr;
 	for(vptr = vlist; *vptr; vptr++){
 		*vptr = NULL;
 	}
-	*count = 0;
 	//clear candidate array
 	struct Candidate **cptr;
 	for(cptr = clist; *cptr; cptr++){
@@ -266,8 +281,13 @@ char *zeroize(int *count, struct Voter **vlist, struct Candidate **clist){
 	}
 	return "TRUE";
 }
-
-char *addvoter(char *buffer, struct Voter **vlist, int *count){
+/**
+*	char* buffer: pointer to the string sent from client
+*	struct Voter **vlist: pointer to the voter_list array
+*	int* count: the address of the variable that stores the number of voters
+*	struct Voter **insert: the pointer pointing to the first NULL pointer in the pointer array
+**/
+char *addvoter(char *buffer, struct Voter **vlist, int *count, struct Voter **insert){
 	if((*count) > BUF_SIZE || (*count) == BUF_SIZE){
 		return "ERROR: voters overflow.";
 	}
@@ -276,8 +296,12 @@ char *addvoter(char *buffer, struct Voter **vlist, int *count){
 
 	if(search_voter(vlist, id)!= NULL) return "EXISTS";
 	//TO DO: add new voter, set voted as 0
-
+	*insert = (struct Voter*) malloc(sizeof(struct Voter));
+	if((*insert) == NULL) return "ERROR: allocate memory to voter pointer failed";
+	(*insert) -> id  = id;
+	(*insert) -> voted = 0;
 	//increment count
+	(*count)+=1;
 	return "OK";
 }
 
@@ -311,11 +335,18 @@ char *votefor(char *buffer, struct Voter **vlist, struct Candidate **clist){
 		if(cmp == 0){
 			//candidate's name already exists, increment votes
 			((*ptr)-> votes) += 1;
+			//mark voter as voted
+			voter->voted = 1;
 			return "EXISTS";
 		}
 	}
 	//TO DO: add new candidate, set votes as 1
+	*ptr = (struct Candidate*) malloc(sizeof(struct Candidate));
+	strcpy((*ptr)->name, name);
+	(*ptr)->votes = 1;
 
+	//mark voter as voted
 	voter->voted = 1;
+
 	return "NEW";
 }

@@ -71,7 +71,7 @@ int main (int argc, char *argv[])
 	if(send_len < 0){
 		error("send identifier ::");
 	}
-	printf("\"%s\" has been sent, length: %d\n", msg, send_len );
+	printf("identifier \"%s\" has been sent, length: %d\n", msg, send_len );
 	
 	//send data body next
 	send_len = send(sockfd, buffer, strlen(buffer), 0);

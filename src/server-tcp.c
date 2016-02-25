@@ -22,7 +22,7 @@ struct Voter{
 	int id;
 	short voted; //0 means not voted yet, 1 mean already voted
 };
-
+@@@
 //helper methods
 void check_recv(int, char *);
 void check_send(int);

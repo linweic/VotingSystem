@@ -307,7 +307,7 @@ void exchange(struct Candidate *cur, struct Candidate *prev, char* signal){
 		//exchange cur->next with prev->next
 		struct Candidate *ptr = cur->next;
 		struct Candidate *candi = prev->next;
-		if(cur->next = prev){
+		if(cur->next == prev){
 			ptr->next = candi->next;
 			candi->next = ptr;
 			cur->next = candi;

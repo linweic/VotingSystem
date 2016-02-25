@@ -35,6 +35,8 @@ void deleCanList(struct Candidate**);
 void deleVoList(struct Voter**);
 struct Voter *search_voter(struct Voter **, int);
 short check_credential(char *, char *, char *);
+void bubble(struct Candidate **, struct Candidate *);
+void exchange(struct Candidate *, struct Candidate *, char*);
 
 //functions
 char *changepassword(char *, char *, char*);
@@ -43,7 +45,7 @@ char *addvoter(char *, struct Voter**);
 char *votefor(char *, struct Voter **, struct Candidate **);
 void listcandidates(struct Candidate *, char *);
 void votecount(struct Candidate **, char *, char *);
-char *viewresult(char *, char *);
+char *viewresult(char *, struct Candidate **, char*, char*);
 
 //int voter_count;
 //struct Candidate *candi_list[BUF_SIZE]; //a list of struct Candidate pointers
@@ -52,7 +54,7 @@ char *viewresult(char *, char *);
 
 int main (int argc, char *argv[])
 {
-	int status, sockfd, new_sockfd, recv_len;
+	int status, sockfd, new_sockfd, recv_len, shutdown = 0;
 	struct addrinfo hints;
 	struct addrinfo *servinfo, *res;
 	struct sockaddr_storage incoming_addr;
@@ -112,7 +114,7 @@ int main (int argc, char *argv[])
 	listen(sockfd, MAX_PENDING);
 	printf("listening on requests to arrive...\n");
 
-	while(1){
+	while(shutdown == 0){
 		addr_size = sizeof(incoming_addr);
 		if((new_sockfd = accept(sockfd, (struct sockaddr *) &incoming_addr, &addr_size))<0){
 			perror("simplex-talk: accept");
@@ -174,16 +176,16 @@ int main (int argc, char *argv[])
 				printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
 				votecount(&chead, buffer, response);
 				send_resp(&new_sockfd, response, strlen(response));
-				
 				break;
 			case '7':
 				printf("invoke viewresult\n");
 				recv_len = recv(new_sockfd, buffer, BUF_SIZE, 0);
 				check_recv(recv_len, buffer);
 				printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
-				strcpy(response, viewresult(buffer, &chead));
-				send_resp(&new_sockfd, response, strlen(response));
-				
+				strcpy(response, viewresult(buffer, &chead, username, pwd));
+				send_resp(&new_sockfd, response, strlen(response));			
+				shutdown = 1;
+				puts("Server shutting down.");
 				break;
 			default:
 				printf("illegal identifier.\n");
@@ -300,7 +302,7 @@ void bubble(struct Candidate **head_ref, struct Candidate *candidate){
 	}
 
 }
-void exchange(struct Candidate *cur, struct Candidate *prev, char *signal){
+void exchange(struct Candidate *cur, struct Candidate *prev, char* signal){
 	if(strcmp(signal, "NOTHEAD")){
 		//exchange cur->next with prev->next
 		struct Candidate *ptr = cur->next;
@@ -334,17 +336,18 @@ void exchange(struct Candidate *cur, struct Candidate *prev, char *signal){
 	}
 }
 short check_credential(char *buffer, char *username, char *password){
+	//return 0 means credential match, otherwise 1
 	char delim[] = " ";
 	char * token;
 	//parse username
 	token = strtok(buffer, delim);
-	if(token == NULL) return "FALSE";
+	if(token == NULL) return 1;
 	//compare username
 	printf("[DEBUG]token_1 is \"%s\"\n", token);
 	int usr_cmp = strcmp(username, token);
 	//parse password
 	token = strtok(NULL, delim);
-	if(token == NULL) return "FALSE";
+	if(token == NULL) return 1;
 	//compare password
 	printf("[DEBUG]token_2 is \"%s\"\n", token);
 	int pwd_cmp = strcmp(password, token);
@@ -355,6 +358,7 @@ char *find_max(struct Candidate** head_ref){
 	struct Candidate *cur = *head_ref;
 	if(cur == NULL) return NULL;
 	int count = 1;
+	int max = cur->votes;
 	char *list = cur->name, *role = "winner:";
 	while(cur->next != NULL){
 		if((cur->next->votes) == max){
@@ -500,9 +504,19 @@ void votecount(struct Candidate **head_ref, char *buffer, char *response){
 	sprintf(response, "%d", -1);
 	return;
 }
-char *viewresult(char *buffer, struct Candidate** head_ref){
-	if(check_credential(buffer) == 0){
-		char *lastline = find_max(head_ref);
+char *viewresult(char *buffer, struct Candidate** head_ref, char* username, char* password){
+	char *result = (char *)malloc(BUF_SIZE);
+	if(check_credential(buffer, username, password) == 0){
+		strcpy(result, find_max(head_ref));
+		strcat(result, "\n");
+		struct Candidate* cur = *head_ref;
+	    while(cur != NULL){
+			char *line = (char *)malloc(BUF_SIZE);
+	        sprintf(line, "%s\t%d\n", cur->name, cur->votes);
+	        strcat(result,line);
+	        cur = cur->next;
+	    }
+		return result;	
 	}
 	else return "UNAUTHORIZED";
 }

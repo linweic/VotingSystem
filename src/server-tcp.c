@@ -36,7 +36,10 @@ void deleVoList(struct Voter**);
 struct Voter *search_voter(struct Voter **, int);
 short check_credential(char *, char *, char *);
 void bubble(struct Candidate **, struct Candidate *);
+void exchangeContent(struct Candidate *, struct Candidate *);
 void exchange(struct Candidate *, struct Candidate *, char*);
+void find_max(struct Candidate**, char* );
+struct Candidate* getTail(struct Candidate*);
 
 //functions
 char *changepassword(char *, char *, char*);
@@ -45,7 +48,7 @@ char *addvoter(char *, struct Voter**);
 char *votefor(char *, struct Voter **, struct Candidate **);
 void listcandidates(struct Candidate *, char *);
 void votecount(struct Candidate **, char *, char *);
-char *viewresult(char *, struct Candidate **, char*, char*);
+void viewresult(char *, struct Candidate **, char*, char*, char*);
 
 //int voter_count;
 //struct Candidate *candi_list[BUF_SIZE]; //a list of struct Candidate pointers
@@ -182,10 +185,12 @@ int main (int argc, char *argv[])
 				recv_len = recv(new_sockfd, buffer, BUF_SIZE, 0);
 				check_recv(recv_len, buffer);
 				printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
-				strcpy(response, viewresult(buffer, &chead, username, pwd));
+				viewresult(buffer, &chead, username, pwd, response);
 				send_resp(&new_sockfd, response, strlen(response));			
-				shutdown = 1;
-				puts("Server shutting down.");
+				if(strcmp(response,"UNAUTHORIZED") != 0){
+					shutdown = 1;
+					puts("Server shutting down.");
+				}
 				break;
 			default:
 				printf("illegal identifier.\n");
@@ -267,43 +272,37 @@ struct Voter *search_voter(struct Voter **head_ref, int id){
 	return NULL;
 }
 
-//This method makes sure candidates with most votes stay at the front of the list
+//This method makes sure candidates with most votes stay at the end of the list
 // and does not care about the ordering of others
 void bubble(struct Candidate **head_ref, struct Candidate *candidate){
-	struct Candidate* cur = *head_ref;
-	if(cur == candidate) return;
-	int cmp = (cur->votes) - (candidate->votes);
-	if(cmp > 0){
-		//candidate does not have maximum number of votes, ignore
-		return;
-	}
-	else if(cmp == 0){
-		//candidate has a tie with highest candidates
-		//exchange candidate with the node next to the group of winners
-		while(cur->next != candidate){
-			if((cur->next->votes) < (candidate->votes)){
-				//when we find the first node(cur->next) with votes fewer than candidate
-				struct Candidate* prev = cur->next;
-				while(prev->next != candidate){
-					//find the node previous to candidate
-					prev = prev->next;
-				}
-				exchange(cur, prev, "NOTHEAD");
-				break;
-			}
-			else cur = cur -> next;
+	//If candidate already at the end of the list, do nothing
+	if(candidate->next == NULL) return;
+	struct Candidate* prev = candidate;
+	struct Candidate* cur = candidate->next;
+	//go through the node from candidate to end, 
+	//if cur has fewer votes than candidate, check its next
+	//if cur has fewer votes and comes to the end of the list, exchange contents in cur and candidate
+	//if cur has fewer votes and its next has the same votes as candidate, exchange contents in cur and candidate
+	//if cur has fewer votes and its next has more votes, do nothing
+	//if cur has same no fewer votes than candidate, do nothing
+	while(cur->votes < candidate->votes){
+		struct Candidate* cur_next = cur->next;
+		if(cur_next == NULL || (cur_next->votes == candidate->votes)){
+			exchangeContent(cur, candidate);
+			break;
 		}
-	}
-	else{
-		//candidate is the single winner, simply change with the head node
-		struct Candidate* prev = cur;
-		while(prev->next != candidate){
-			//find the node previous to candidate
-			prev = prev->next;
-		}
-		exchange(*head_ref, prev, "HEAD");
-	}
-
+		cur = cur->next;
+	}   
+}
+void exchangeContent(struct Candidate *can1, struct Candidate *can2){
+	char *tmp_name = (char*) malloc(BUF_SIZE);
+	strcpy(tmp_name, can1->name);
+	int tmp_votes = can1->votes;
+	strncpy(can1->name, can2->name, sizeof(can2->name));
+	can1->votes = can2->votes;
+	strncpy(can2->name, tmp_name, BUF_SIZE);
+	can2->votes = tmp_votes;
+	free(tmp_name);
 }
 void exchange(struct Candidate *cur, struct Candidate *prev, char* signal){
 	if(strcmp(signal, "NOTHEAD")){
@@ -359,29 +358,33 @@ short check_credential(char *buffer, char *username, char *password){
 	if(usr_cmp == 0 && pwd_cmp == 0){ return 0;}
 	else return 1;
 }
-char *find_max(struct Candidate** head_ref){
+void find_max(struct Candidate** head_ref, char* response){
+	struct Candidate *tail = getTail(*head_ref);
+	if(tail == NULL) return;
 	struct Candidate *cur = *head_ref;
-	if(cur == NULL) return NULL;
-	int count = 1;
-	int max = cur->votes;
-	char *list = cur->name, *role = "winner:";
-	while(cur->next != NULL){
-		if((cur->next->votes) == max){
-			strcat(list, " ");
-			strcat(list, cur->next->name);
-			count++;
-			cur = cur->next;
+	int max = tail->votes;
+	//find the starting point of all the winners
+	while(cur->votes != tail->votes){
+		cur = cur->next;
+	}
+	if(cur == tail){
+		sprintf(response, "Winner: %s\n", tail->name);
+	}
+	else {
+		sprintf(response, "Tie: %s ", tail->name);
+		//assemble all the ties from cur to tail
+		while(cur!=tail){
+			strcat(response, cur->name);
+			strcat(response, " ");
 		}
-		else break;
 	}
-	if(count > 1){
-		role = "tie:";
-		strcat(role, list);
+}
+struct Candidate* getTail(struct Candidate* head){
+	if(head == NULL) return NULL;
+	while(head->next != NULL){
+		head = head->next;
 	}
-	else{
-		strcat(role, list);
-	}
-	return role;
+	return head;
 }
 char *changepassword(char *buffer, char *username, char *password){
 	char delim[] = " ";
@@ -510,20 +513,21 @@ void votecount(struct Candidate **head_ref, char *buffer, char *response){
 	sprintf(response, "%d", -1);
 	return;
 }
-char *viewresult(char *buffer, struct Candidate** head_ref, char* username, char* password){
-	char *result = (char *)malloc(BUF_SIZE);
+void viewresult(char *buffer, struct Candidate** head_ref, char* username, char* password, char* response){
+	*response = '\0';
 	if(check_credential(buffer, username, password) == 0){
-		strcpy(result, find_max(head_ref));
-		strcat(result, "\n");
+		find_max(head_ref, response);
+		strcat(response, "\n");
 		struct Candidate* cur = *head_ref;
 	    while(cur != NULL){
-			char *line = (char *)malloc(BUF_SIZE);
-	        sprintf(line, "%s\t%d\n", cur->name, cur->votes);
-	        strcat(result,line);
-	        cur = cur->next;
-			free(line);
+	    	strcat(response, cur->name);
+	    	strcat(response, "\t");
+	    	char *votes_num = malloc(10);
+	    	sprintf(votes_num, "%d\n", cur->votes);
+	    	strcat(response, votes_num);
+	    	free(votes_num);
+	    	cur = cur->next;
 	    }
-		return result;	
 	}
-	else return "UNAUTHORIZED";
+	else strcpy(response,"UNAUTHORIZED");
 }

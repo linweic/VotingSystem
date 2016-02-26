@@ -28,7 +28,7 @@ struct Voter{
 //helper methods
 void check_recv(int, char *);
 void check_send(int);
-void send_resp(int *, char *, int, struct addrinfo*);
+void send_resp(int *, char *, int, struct sockaddr*, socklen_t*);
 void printvoters(struct Voter*);
 void printcandidates(struct Candidate*);
 void deleCanList(struct Candidate**);
@@ -99,13 +99,14 @@ int main (int argc, char *argv[])
 		}
 		break; //when the bind succeeds for the first time, exit the loop
 	}
-	freeaddrinfo(servinfo); //finish checking the linked list returned from getaddrinfo()
+	//freeaddrinfo(servinfo); //finish checking the linked list returned from getaddrinfo()
 
 	if(res == NULL){
 		fprintf(stderr, "server: failed to bind.\n");
 		exit(1);
 	}
-	//freeaddrinfo(servinfo); //finish checking the linked list returned from getaddrinfo()
+	//freeaddrinfo(servinfo); 
+	//finish checking the linked list returned from getaddrinfo()
 	printf("Socket binded to local address and port number.\n");
 
 	while(shutdown == 0){
@@ -123,7 +124,7 @@ int main (int argc, char *argv[])
 				check_recv(recv_len, buffer);
 				printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
 				strcpy(response, changepassword(buffer, username, pwd));
-				send_resp(&sockfd, response, strlen(response), res);
+				send_resp(&sockfd, response, strlen(response), (struct sockaddr*)&incoming_addr, &addr_size);
 				printf("current password is \"%s\"\n", pwd);
 				break;
 			case '2':
@@ -131,8 +132,7 @@ int main (int argc, char *argv[])
 				addr_size = sizeof(incoming_addr);
 				strcpy(response, zeroize(&chead, &vhead));
 				//voter_count = 0;
-				send_resp(&sockfd, response, strlen(response), res);
-
+				send_resp(&sockfd, response, strlen(response), (struct sockaddr*)&incoming_addr, &addr_size);
 				break;
 			case '3':
 				printf("invoke addvoter\n");
@@ -140,7 +140,7 @@ int main (int argc, char *argv[])
 				check_recv(recv_len, buffer);
 				printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
 				strcpy(response, addvoter(buffer, &vhead));
-				send_resp(&sockfd, response, strlen(response), res);
+				send_resp(&sockfd, response, strlen(response), (struct sockaddr*)&incoming_addr, &addr_size);
 				printvoters(vhead);
 				break;
 			case '4':
@@ -149,14 +149,14 @@ int main (int argc, char *argv[])
 				check_recv(recv_len, buffer);
 				printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
 				strcpy(response, votefor(buffer, &vhead, &chead));
-				send_resp(&sockfd, response, strlen(response), res);
+				send_resp(&sockfd, response, strlen(response), (struct sockaddr*)&incoming_addr, &addr_size);
 				printvoters(vhead);
 				printcandidates(chead);
 				break;
 			case '5':
 				printf("invoke listcandidates\n");
 				listcandidates(chead, response);
-				send_resp(&sockfd, response, strlen(response), res);				
+				send_resp(&sockfd, response, strlen(response), (struct sockaddr*)&incoming_addr, &addr_size);			
 				break;
 			case '6':
 				printf("invoke votecount\n");
@@ -164,7 +164,7 @@ int main (int argc, char *argv[])
 				check_recv(recv_len, buffer);
 				printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
 				votecount(&chead, buffer, response);
-				send_resp(&sockfd, response, strlen(response), res);
+				send_resp(&sockfd, response, strlen(response), (struct sockaddr*)&incoming_addr, &addr_size);
 				break;
 			case '7':
 				printf("invoke viewresult\n");
@@ -172,23 +172,26 @@ int main (int argc, char *argv[])
 				check_recv(recv_len, buffer);
 				printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
 				viewresult(buffer, &chead, username, pwd, response);
-				send_resp(&sockfd, response, strlen(response), res);			
+				send_resp(&sockfd, response, strlen(response), (struct sockaddr*)&incoming_addr, &addr_size);			
 				if(strcmp(response,"UNAUTHORIZED") != 0){
 					shutdown = 1;
 					puts("Server shutting down.");
 				}
 				break;
+			/*
 			default:
 				printf("illegal identifier.\n");
 				strcpy(response, "illegal identifier");
 				send_resp(&sockfd, response, strlen(response), res);
 				break;
+			*/
 		}
 		
 	}
 	close(sockfd);
 	deleCanList(&chead);
 	deleVoList(&vhead);
+	freeaddrinfo(servinfo); //finish checking the linked list returned from getadd    rinfo()
 	return 0;
 }
 
@@ -208,9 +211,9 @@ void check_send(int len){
 		exit(1);
 	}
 }
-void send_resp(int *sockfd, char *response, int len, struct addrinfo* res){
+void send_resp(int *sockfd, char *response, int len, struct sockaddr* addr, socklen_t* addrlen){
 	int send_len = sendto( *sockfd, response, len, 0,
-		 res->ai_addr, res->ai_addrlen);
+		 addr, *addrlen);
 	check_send(send_len);
 	printf("\"%s\" has been sent to client, length: %d\n", response, send_len);
 }

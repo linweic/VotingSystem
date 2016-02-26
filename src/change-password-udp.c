@@ -8,31 +8,19 @@
 #include <netdb.h>
 
 #define BUF_SIZE 256
+#define ID "1"
 
-void error(const char *msg){
-	perror(msg);
-	exit(1);
-}
-/*
-void sendpkg(int *sfd, char *buf, struct addrinfo *dist){
-	if(scanf("%s", buf)<0){
-		error("scanf:");
-	}
-	printf("read input successfully.\n");
-	int sent_len = sendto(*sfd, buf, BUF_SIZE, 0, 
-		dist->ai_addr, dist->ai_addrlen);
-	if(sent_len < 0){
-		error("Failed to send package.");
-	}
-	printf("%d bytes of \"%s\" have been sent", sent_len, buf);
-}
-*/
+void error(const char *);
+void check_recv(int, char *);
+
 int main (int argc, char *argv[])
 {
-	int status, sockfd;
+	int status, sockfd, send_len, recv_len;
 	struct addrinfo hints;
 	struct addrinfo *servinfo, *res;
-	char buffer[BUF_SIZE],username[BUF_SIZE], pwd[BUF_SIZE], new_pwd[BUF_SIZE];
+	struct sockaddr_storage incoming_addr;
+	socklen_t addr_size;
+	char buffer[BUF_SIZE],msg[] = ID;
 
 	if(argc != 3){
 		fprintf(stderr, "Argument mis-match.\n");
@@ -69,27 +57,38 @@ int main (int argc, char *argv[])
 	}
 	freeaddrinfo(servinfo); //finish checking the linked list returned from getaddrinfo()
 	printf("Socket created.\n");
-	/*
-	printf("Please enter username:\n");
-	sendpkg(&sockfd, buffer, res);
-	printf("Please enter current password:\n");
-	sendpkg(&sockfd, buffer, res);
-	printf("Please enter the new password:\n");
-	sendpkg(&sockfd, buffer, res);
-	*/
+
 	printf("Please enter username, your old password and the new password:\n");
 	if(fgets(buffer, 256, stdin)<0){
 		error("scanf::");
 	}
 	buffer[strlen(buffer)-1] = '\0';
 	//send an identifier first
-	
-	//send real message
-	int sent_len = sendto(sockfd, buffer, strlen(buffer), 0, 
+	send_len = sendto(sockfd, msg, strlen(msg), 0,
 		res->ai_addr, res->ai_addrlen);
-	if(sent_len < 0){
-		error("Failed to send package.");
+	if(send_len < 0){
+		error("send identifier ::");
 	}
-	printf("%d bytes of \"%s\" have been sent\n", sent_len, buffer);
+	printf("identifier \"%s\" has been sent, length: %d\n", msg, send_len );
+
+	//send real message
+	send_len = sendto(sockfd, buffer, strlen(buffer), 0, 
+		res->ai_addr, res->ai_addrlen);
+	if(send_len < 0){
+		error("send.");
+	}
+	printf("\"%s\" has been sent, length: %d\n", buffer, send_len);
+
+	//receieve response from server
+	addr_size = sizeof(incoming_addr);
+	recv_len = recvfrom(sockfd, buffer, BUF_SIZE, 0, (struct sockaddr *) &incoming_addr, &addr_size);
+	check_recv(recv_len, buffer);
+	printf("\"%s\" receieved from server, length: %d\n", buffer, recv_len);
+
 	return 0;
+}
+
+void error(const char *msg){
+	perror(msg);
+	exit(1);
 }

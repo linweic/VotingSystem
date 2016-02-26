@@ -35,7 +35,7 @@ int main (int argc, char *argv[])
 	//reset and fill in hints
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_UNSPEC; //don't care ipv4 or ipv6
-	hints.ai_socktype = SOCK_DGRAM; //TCP socket type
+	hints.ai_socktype = SOCK_DGRAM; //UDP socket type
 	hints.ai_flags = AI_PASSIVE; //wildcard IP address
 	hints.ai_protocol = 0; //any protocol
 
@@ -91,4 +91,13 @@ int main (int argc, char *argv[])
 void error(const char *msg){
 	perror(msg);
 	exit(1);
+}
+void check_recv(int len, char *buffer){
+	if(len <0){
+		error("receieve ::");
+	}
+	else if(len == 0){
+		printf("The remote socket has closed connection on you.\n");
+	}
+	buffer[len] = '\0';
 }

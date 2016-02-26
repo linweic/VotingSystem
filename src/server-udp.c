@@ -118,6 +118,7 @@ int main (int argc, char *argv[])
 		switch(buffer[0]){
 			case '1':
 				printf("invoke change-password method\n");
+				addr_size = sizeof(incoming_addr);
 				recv_len = recvfrom(sockfd, buffer, BUF_SIZE, 0, (struct sockaddr *) &incoming_addr, &addr_size);
 				check_recv(recv_len, buffer);
 				printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
@@ -127,6 +128,7 @@ int main (int argc, char *argv[])
 				break;
 			case '2':
 				printf("invoke zeroize\n");
+				addr_size = sizeof(incoming_addr);
 				strcpy(response, zeroize(&chead, &vhead));
 				//voter_count = 0;
 				send_resp(&sockfd, response, strlen(response), res);
@@ -202,7 +204,7 @@ void check_recv(int len, char *buffer){
 }
 void check_send(int len){
 	if(len < 0){
-		perror("send::");
+		perror("send:");
 		exit(1);
 	}
 }

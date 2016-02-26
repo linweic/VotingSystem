@@ -312,7 +312,10 @@ short check_credential(char *buffer, char *username, char *password){
 }
 void find_max(struct Candidate** head_ref, char* response){
 	struct Candidate *tail = getTail(*head_ref);
-	if(tail == NULL) return;
+	if(tail == NULL) {
+		strcpy(response, "NULL");
+		return;
+	}
 	struct Candidate *cur = *head_ref;
 	int max = tail->votes;
 	//find the starting point of all the winners

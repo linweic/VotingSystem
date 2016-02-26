@@ -37,7 +37,6 @@ struct Voter *search_voter(struct Voter **, int);
 short check_credential(char *, char *, char *);
 void bubble(struct Candidate **, struct Candidate *);
 void exchangeContent(struct Candidate *, struct Candidate *);
-void exchange(struct Candidate *, struct Candidate *, char*);
 void find_max(struct Candidate**, char* );
 struct Candidate* getTail(struct Candidate*);
 
@@ -304,41 +303,7 @@ void exchangeContent(struct Candidate *can1, struct Candidate *can2){
 	can2->votes = tmp_votes;
 	free(tmp_name);
 }
-void exchange(struct Candidate *cur, struct Candidate *prev, char* signal){
-	if(strcmp(signal, "NOTHEAD")){
-		//exchange cur->next with prev->next
-		printf("exchange %s with %s\n", cur->next->name, prev->next->name);
-		struct Candidate *ptr = cur->next;
-		struct Candidate *candi = prev->next;
-		if(cur->next == prev){
-			ptr->next = candi->next;
-			candi->next = ptr;
-			cur->next = candi;
-		}
-		else{
-			struct Candidate *ptr_next = ptr->next;
-			ptr->next = candi->next;
-			candi->next = ptr_next;
-			cur->next = candi;
-			prev->next = ptr;
-		}
-	}
-	else{
-		//exchange cur with prev->next
-		printf("exchange %s with %s\n", cur->name, prev->next->name);
-		struct Candidate *candi = prev->next;
-		if(cur == prev){
-			cur->next = candi->next;
-			candi->next = cur;
-		}
-		else{
-			struct Candidate *cur_next = cur->next;
-			cur->next = candi->next;
-			candi->next = cur_next;
-			prev->next = cur;
-		}
-	}
-}
+	
 short check_credential(char *buffer, char *username, char *password){
 	//return 0 means credential match, otherwise 1
 	char delim[] = " ";
@@ -368,7 +333,7 @@ void find_max(struct Candidate** head_ref, char* response){
 		cur = cur->next;
 	}
 	if(cur == tail){
-		sprintf(response, "Winner: %s\n", tail->name);
+		sprintf(response, "Winner: %s", tail->name);
 	}
 	else {
 		sprintf(response, "Tie: %s ", tail->name);
@@ -376,15 +341,17 @@ void find_max(struct Candidate** head_ref, char* response){
 		while(cur!=tail){
 			strcat(response, cur->name);
 			strcat(response, " ");
+			cur = cur->next;
 		}
 	}
 }
 struct Candidate* getTail(struct Candidate* head){
-	if(head == NULL) return NULL;
-	while(head->next != NULL){
-		head = head->next;
+	struct Candidate* cur = head;
+	if(cur == NULL) return NULL;
+	while(cur->next != NULL){
+		cur = cur->next;
 	}
-	return head;
+	return cur;
 }
 char *changepassword(char *buffer, char *username, char *password){
 	char delim[] = " ";

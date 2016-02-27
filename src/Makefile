@@ -4,6 +4,10 @@ CFLAGS = -g
 #target directory
 bin = ../bin
 
+part1: server-tcp add-voter-tcp change-password-tcp list-candidates-tcp view-result-tcp vote-count-tcp vote-tcp vote-zero-tcp
+
+part2: server-udp add-voter-udp change-password-udp list-candidates-udp view-result-udp vote-count-udp vote-udp vote-zero-udp
+
 server-tcp: server-tcp.c
 	gcc -o $(bin)/server-tcp -g server-tcp.c
 

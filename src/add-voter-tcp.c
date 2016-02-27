@@ -20,13 +20,14 @@ int main (int argc, char *argv[])
 	struct addrinfo *servinfo, *res;
 	char buffer[BUF_SIZE],msg[] = ID;
 
-	if(argc != 3){
+	if(argc != 4){
 		fprintf(stderr, "Argument mis-match.\n");
 		exit(1);
 	}
 
 	char *serv_addr = argv[1];
 	char *port_num = argv[2];
+	strcpy(buffer, argv[3]);
 	printf("server address is: %s\n", serv_addr);
 	printf("port number is: %s\n", port_num);
 
@@ -59,12 +60,6 @@ int main (int argc, char *argv[])
 		exit(1);
 	}
 	printf("Client connects to local address and port number.\n");
-
-	printf("Please enter the voter id you want to add:\n");
-	if(fgets(buffer, 256, stdin)<0){
-		error("scanf::");
-	}
-	buffer[strlen(buffer)-1] = '\0';
 	
 	//send identifier first
 	send_len = send(sockfd, msg, strlen(msg), 0);

@@ -407,7 +407,7 @@ char *votefor(char *buffer, struct Voter **vhead_ref, struct Candidate **chead_r
 	token = strtok(buffer, delim);
 	if(token == NULL) return "ERROR";
 	printf("[DEBUG]token_1 is \"%s\"\n", token);
-	name = (char *) malloc(strlen(token)+1);
+	name = (char *) alloca(strlen(token)+1);
 	strcpy(name, token);
 
 	//parse voterid
@@ -445,7 +445,7 @@ char *votefor(char *buffer, struct Voter **vhead_ref, struct Candidate **chead_r
 	//mark voter as voted
 	voter->voted = 1;
 
-	free(name);
+	//free(name);
 	return "NEW";
 }
 void listcandidates(struct Candidate *head, char *response){

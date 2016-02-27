@@ -22,13 +22,14 @@ int main (int argc, char *argv[])
 	socklen_t addr_size;
 	char buffer[BUF_SIZE],msg[] = ID;
 
-	if(argc != 3){
+	if(argc != 5){
 		fprintf(stderr, "Argument mis-match.\n");
 		exit(1);
 	}
 
 	char *serv_addr = argv[1];
 	char *port_num = argv[2];
+	sprintf(buffer, "%s %s", argv[3], argv[4]);
 	printf("server address is: %s\n", serv_addr);
 	printf("port number is: %s\n", port_num);
 
@@ -57,12 +58,7 @@ int main (int argc, char *argv[])
 	}
 	freeaddrinfo(servinfo); //finish checking the linked list returned from getaddrinfo()
 	printf("Socket created.\n");
-
-	printf("Please enter the username and password to see the result:\n");
-	if(fgets(buffer, 256, stdin)<0){
-		error("scanf::");
-	}
-	buffer[strlen(buffer)-1] = '\0';
+	
 	//send an identifier first
 	send_len = sendto(sockfd, msg, strlen(msg), 0,
 		res->ai_addr, res->ai_addrlen);

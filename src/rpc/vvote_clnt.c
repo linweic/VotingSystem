@@ -9,20 +9,14 @@
 static struct timeval TIMEOUT = { 25, 0 };
 
 char **
-changepassword_1(arg1, arg2, arg3, clnt)
-	char *arg1;
-	char *arg2;
-	char *arg3;
+changepassword_1(argp, clnt)
+	Credential *argp;
 	CLIENT *clnt;
 {
-	changepassword_1_argument arg;
 	static char *clnt_res;
 
 	memset((char *)&clnt_res, 0, sizeof(clnt_res));
-	arg.arg1 = arg1;
-	arg.arg2 = arg2;
-	arg.arg3 = arg3;
-	if (clnt_call(clnt, changepassword, xdr_changepassword_1_argument, &arg, xdr_wrapstring, &clnt_res, TIMEOUT) != RPC_SUCCESS)
+	if (clnt_call(clnt, changepassword, xdr_Credential, argp, xdr_wrapstring, &clnt_res, TIMEOUT) != RPC_SUCCESS)
 		return (NULL);
 	return (&clnt_res);
 }

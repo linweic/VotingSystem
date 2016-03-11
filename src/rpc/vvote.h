@@ -10,9 +10,12 @@
 
 #include <rpc/rpc.h>
 
+#define PORTNUM "6106"
+#define MAX_PENDING 5
+#define BUF_SIZE 256
 
 struct Candidate {
-	String name;
+	char *name;
 	int votes;
 	struct Candidate *next;
 };
@@ -28,7 +31,7 @@ bool_t xdr_Candidate();
 
 struct Voter {
 	int id;
-	short voted;
+	u_int voted;
 	struct Voter *next;
 };
 typedef struct Voter Voter;
@@ -41,33 +44,41 @@ bool_t xdr_Voter();
 #endif /* Old Style C */
 
 
-struct changepassword_1_argument {
-	char *arg1;
-	char *arg2;
-	char *arg3;
+struct Credential {
+	char *username;
+	char *password;
+	char *newpassword;
 };
-typedef struct changepassword_1_argument changepassword_1_argument;
+typedef struct Credential Credential;
 #ifdef __cplusplus
-extern "C" bool_t xdr_changepassword_1_argument(XDR *, changepassword_1_argument);
+extern "C" bool_t xdr_Credential(XDR *, Credential*);
 #elif __STDC__
-extern  bool_t xdr_changepassword_1_argument(XDR *, changepassword_1_argument);
+extern  bool_t xdr_Credential(XDR *, Credential*);
 #else /* Old Style C */
-bool_t xdr_changepassword_1_argument();
+bool_t xdr_Credential();
 #endif /* Old Style C */
 
+/*GLOBAL VARIABLES*/
+extern Candidate *chead;
+extern Voter *vhead;
+extern int shut_down;
+extern char buffer[BUF_SIZE];
+extern char response[BUF_SIZE];
+extern char username[BUF_SIZE];
+extern char pwd[BUF_SIZE];
 
 #define VOTINGSYS ((rpc_uint)0x2fffffff)
 #define VOTINGSYS_V1 ((rpc_uint)1)
 
 #ifdef __cplusplus
 #define changepassword ((rpc_uint)1)
-extern "C" char ** changepassword_1(char *, char *, char *, CLIENT *);
-extern "C" char ** changepassword_1_svc(char *, char *, char *, struct svc_req *);
+extern "C" char ** changepassword_1(Credential *, CLIENT *);
+extern "C" char ** changepassword_1_svc(Credential *, struct svc_req *);
 
 #elif __STDC__
 #define changepassword ((rpc_uint)1)
-extern  char ** changepassword_1(char *, char *, char *, CLIENT *);
-extern  char ** changepassword_1_svc(char *, char *, char *, struct svc_req *);
+extern  char ** changepassword_1(Credential *, CLIENT *);
+extern  char ** changepassword_1_svc(Credential *, struct svc_req *);
 
 #else /* Old Style C */
 #define changepassword ((rpc_uint)1)

@@ -11,7 +11,7 @@ xdr_Candidate(xdrs, objp)
 	Candidate *objp;
 {
 
-	if (!xdr_String(xdrs, &objp->name))
+	if (!xdr_string(xdrs, &objp->name, BUF_SIZE))
 		return (FALSE);
 	if (!xdr_int(xdrs, &objp->votes))
 		return (FALSE);
@@ -28,7 +28,7 @@ xdr_Voter(xdrs, objp)
 
 	if (!xdr_int(xdrs, &objp->id))
 		return (FALSE);
-	if (!xdr_short(xdrs, &objp->voted))
+	if (!xdr_u_int(xdrs, &objp->voted))
 		return (FALSE);
 	if (!xdr_pointer(xdrs, (char **)&objp->next, sizeof(Voter), (xdrproc_t)xdr_Voter))
 		return (FALSE);
@@ -36,15 +36,16 @@ xdr_Voter(xdrs, objp)
 }
 
 bool_t
-xdr_changepassword_1_argument(xdrs, objp)
+xdr_Credential(xdrs, objp)
 	XDR *xdrs;
-	changepassword_1_argument *objp;
+	Credential *objp;
 {
-	if (!xdr_string(xdrs, &objp->arg1, ~0))
+
+	if (!xdr_string(xdrs, &objp->username, BUF_SIZE))
 		return (FALSE);
-	if (!xdr_string(xdrs, &objp->arg2, ~0))
+	if (!xdr_string(xdrs, &objp->password, BUF_SIZE))
 		return (FALSE);
-	if (!xdr_string(xdrs, &objp->arg3, ~0))
+	if (!xdr_string(xdrs, &objp->newpassword, BUF_SIZE))
 		return (FALSE);
 	return (TRUE);
 }

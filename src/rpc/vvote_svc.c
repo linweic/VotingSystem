@@ -65,21 +65,13 @@ closedown()
 	(void) alarm(_RPCSVC_CLOSEDOWN);
 }
 
-static char **
-_changepassword_1(argp, rqstp)
-	changepassword_1_argument *argp;
-	struct svc_req *rqstp;
-{
-	return(changepassword_1_svc(argp->arg1, argp->arg2, argp->arg3, rqstp));
-}
-
 static void
 votingsys_1(rqstp, transp)
 	struct svc_req *rqstp;
 	SVCXPRT *transp;
 {
 	union {
-		changepassword_1_argument changepassword_1_arg;
+		Credential changepassword_1_arg;
 	} argument;
 	char *result;
 	bool_t (*xdr_argument)(), (*xdr_result)();
@@ -93,9 +85,9 @@ votingsys_1(rqstp, transp)
 		return;
 
 	case changepassword:
-		xdr_argument = xdr_changepassword_1_argument;
+		xdr_argument = xdr_Credential;
 		xdr_result = xdr_wrapstring;
-		local = (char *(*)()) _changepassword_1;
+		local = (char *(*)()) changepassword_1_svc;
 		break;
 
 	default:
@@ -121,19 +113,40 @@ votingsys_1(rqstp, transp)
 	return;
 }
 
-
+/*intialize global variables*/
+Candidate *chead = NULL;
+Voter *vhead = NULL;
+int shut_down = 0;
+char buffer[BUF_SIZE] = "";
+char response[BUF_SIZE] = "";
+char username[BUF_SIZE] = "";
+char pwd[BUF_SIZE] = "";
 
 int
 main(argc, argv)
 int argc;
 char *argv[];
 {
+	//set up default username and password
+	if(argc == 1){
+		strcpy(username,"cis505");
+		strcpy(pwd, "project2");
+	}
+	else if (argc == 3){
+		strcpy(username, argv[1]);
+		strcpy(pwd, argv[2]);
+	}
+	else{
+		fprintf(stderr,"Argument mis-match.");
+		exit(1);
+	}
+	printf("###\n");
 	SVCXPRT *transp = NULL;
 	int sock;
 	int proto = 0;
 	struct sockaddr_in saddr;
 	int asize = sizeof (saddr);
-
+	//printf("###\n");
 	if (getsockname(0, (struct sockaddr *)&saddr, &asize) == 0) {
 		int ssize = sizeof (int);
 
@@ -146,7 +159,9 @@ char *argv[];
 		_rpcpmstart = 1;
 		proto = 0;
 		openlog("vvote", LOG_PID, LOG_DAEMON);
+		printf("####\n");
 	} else {
+		printf("#####\n");
 #ifndef RPC_SVC_FG
 		int size;
 		int pid, i;
@@ -171,6 +186,7 @@ char *argv[];
 		}
 		openlog("vvote", LOG_PID, LOG_DAEMON);
 #endif
+		printf("######\n");
 		sock = RPC_ANYSOCK;
 		(void) pmap_unset(VOTINGSYS, VOTINGSYS_V1);
 	}

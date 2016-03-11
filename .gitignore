@@ -1,3 +1,4 @@
 bin/*
 sh/*
+src/rpc/bin/*
 .DS_Store

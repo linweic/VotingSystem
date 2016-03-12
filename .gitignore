@@ -1,7 +1,4 @@
 bin/*
 sh/*
-src/rpc/bin/change-password
-src/rpc/bin/server_svc
-src/rpc/bin/*.o
-src/rpc/bin/.*
+src/rpc/bin/[^Makefile]*
 .DS_Store

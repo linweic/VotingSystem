@@ -22,39 +22,46 @@ int main(int argc, char *argv[])
         printf("error: could not connect to server.\n");
         return 1;
     }
-    puts("Client connects to server successfully.");
+    printf("Client connects to server successfully.\n");
     //create credential object
     cred = (Credential*) malloc(sizeof(Credential));
 
-    puts("Please enter username.");
+    printf("Please enter username.\n");
     if(fgets(input, BUF_SIZE, stdin)<0){
     	error("scanf::");
     }
     input[strlen(input)-1] = '\0';
+	cred->username = (char*)malloc((strlen(input)+1)*sizeof(char));
     strcpy(cred->username, input);
+	
 
-    puts("Please enter your old password.");
+    printf("Please enter your old password.\n");
     if(fgets(input, BUF_SIZE, stdin)<0){
     	error("scanf::");
     }
     input[strlen(input)-1] = '\0';
+	cred->password = (char*)malloc((strlen(input)+1)*sizeof(char));
     strcpy(cred->password, input);
 
-    puts("Please enter your new password.");
+    printf("Please enter your new password.\n");
     if(fgets(input, BUF_SIZE, stdin)<0){
     	error("scanf::");
     }
-    input[strlen(input) - 1] = '\0';
+    input[strlen(input)-1] = '\0';
+	cred->newpassword = (char*)malloc((strlen(input)+1)*sizeof(char));
     strcpy(cred->newpassword, input);
 
     // call remote procedure 
-    result = changepassword_1(*cred, cl);
+    result = changepassword_1(cred, cl);
     if (result == NULL) {
-        printf("error: RPC failed!\n");
+        clnt_perror(cl,argv[1]);
         exit(1);
     }
     printf("%s\n", *result);
-
+	free(cred->username);
+	free(cred->password);
+	free(cred->newpassword);
+	free(cred);
     return 0;
 }
 

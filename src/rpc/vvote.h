@@ -6,9 +6,12 @@
 #ifndef _VVOTE_H_RPCGEN
 #define _VVOTE_H_RPCGEN
 
-#define RPCGEN_VERSION	199506
-
 #include <rpc/rpc.h>
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define PORTNUM "6106"
 #define MAX_PENDING 5
@@ -20,14 +23,6 @@ struct Candidate {
 	struct Candidate *next;
 };
 typedef struct Candidate Candidate;
-#ifdef __cplusplus
-extern "C" bool_t xdr_Candidate(XDR *, Candidate*);
-#elif __STDC__
-extern  bool_t xdr_Candidate(XDR *, Candidate*);
-#else /* Old Style C */
-bool_t xdr_Candidate();
-#endif /* Old Style C */
-
 
 struct Voter {
 	int id;
@@ -35,14 +30,6 @@ struct Voter {
 	struct Voter *next;
 };
 typedef struct Voter Voter;
-#ifdef __cplusplus
-extern "C" bool_t xdr_Voter(XDR *, Voter*);
-#elif __STDC__
-extern  bool_t xdr_Voter(XDR *, Voter*);
-#else /* Old Style C */
-bool_t xdr_Voter();
-#endif /* Old Style C */
-
 
 struct Credential {
 	char *username;
@@ -50,13 +37,6 @@ struct Credential {
 	char *newpassword;
 };
 typedef struct Credential Credential;
-#ifdef __cplusplus
-extern "C" bool_t xdr_Credential(XDR *, Credential*);
-#elif __STDC__
-extern  bool_t xdr_Credential(XDR *, Credential*);
-#else /* Old Style C */
-bool_t xdr_Credential();
-#endif /* Old Style C */
 
 /*GLOBAL VARIABLES*/
 extern Candidate *chead;
@@ -67,23 +47,38 @@ extern char response[BUF_SIZE];
 extern char username[BUF_SIZE];
 extern char pwd[BUF_SIZE];
 
-#define VOTINGSYS ((rpc_uint)0x2fffffff)
-#define VOTINGSYS_V1 ((rpc_uint)1)
+#define VOTINGSYS 0x2fffffff
+#define VOTINGSYS_V1 1
 
-#ifdef __cplusplus
-#define changepassword ((rpc_uint)1)
-extern "C" char ** changepassword_1(Credential *, CLIENT *);
-extern "C" char ** changepassword_1_svc(Credential *, struct svc_req *);
-
-#elif __STDC__
-#define changepassword ((rpc_uint)1)
+#if defined(__STDC__) || defined(__cplusplus)
+#define changepassword 1
 extern  char ** changepassword_1(Credential *, CLIENT *);
 extern  char ** changepassword_1_svc(Credential *, struct svc_req *);
+extern int votingsys_1_freeresult (SVCXPRT *, xdrproc_t, caddr_t);
 
-#else /* Old Style C */
-#define changepassword ((rpc_uint)1)
+#else /* K&R C */
+#define changepassword 1
 extern  char ** changepassword_1();
 extern  char ** changepassword_1_svc();
-#endif /* Old Style C */
+extern int votingsys_1_freeresult ();
+#endif /* K&R C */
+
+/* the xdr functions */
+
+#if defined(__STDC__) || defined(__cplusplus)
+extern  bool_t xdr_Candidate (XDR *, Candidate*);
+extern  bool_t xdr_Voter (XDR *, Voter*);
+extern  bool_t xdr_Credential (XDR *, Credential*);
+
+#else /* K&R C */
+extern bool_t xdr_Candidate ();
+extern bool_t xdr_Voter ();
+extern bool_t xdr_Credential ();
+
+#endif /* K&R C */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* !_VVOTE_H_RPCGEN */

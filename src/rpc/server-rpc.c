@@ -3,39 +3,39 @@
 #include <stdlib.h>
 #include <string.h>
 
-char ** changepassword_1_svc(Credential credential, struct svc_req *req){
+char ** changepassword_1_svc(Credential *credential, struct svc_req *req){
 	static char *result; 
 	//parse username
-	if(credential.username == NULL){
-		strcpy(result, "FALSE");
+	if(credential->username == NULL){
+		result = "FALSE";
 		return (&result);
 	}
-	printf("[DEBUG]credential username is \"%s\"\n", credential.username);
+	printf("[DEBUG]credential username is \"%s\"\n", credential->username);
 	//compare username
-	int usr_cmp = strcmp(credential.username, username);
+	int usr_cmp = strcmp(credential->username, username);
 	//parse password
-	if(credential.password == NULL){
-		strcpy(result, "FALSE");
+	if(credential->password == NULL){
+		result = "FALSE";
 		return (&result);
 	}
-	printf("[DEBUG]credential password is \"%s\"\n", credential.password);
+	printf("[DEBUG]credential password is \"%s\"\n", credential->password);
 	//compare password
-	int pwd_cmp = strcmp(credential.password, pwd);
+	int pwd_cmp = strcmp(credential->password, pwd);
 	//parse new password
-	if(credential.newpassword == NULL){
-		strcpy(result, "FALSE");
+	if(credential->newpassword == NULL){
+		result = "FALSE";
 		return (&result);
 	}
-	printf("[DEBUG]credential new password is \"%s\"\n", credential.newpassword);
+	printf("[DEBUG]credential new password is \"%s\"\n", credential->newpassword);
 	
 	if(usr_cmp == 0 && pwd_cmp == 0){
 		//credential matches
-		strcpy(pwd, credential.newpassword);
-		strcpy(result,"TRUE");
+		strcpy(pwd, credential->newpassword);
+		result = "TRUE";
 		return (&result);
 	}
 	else{
-		strcpy(result, "FALSE");
+		result = "FALSE";
 		return (&result);
 	}
 }

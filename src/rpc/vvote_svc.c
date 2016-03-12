@@ -21,6 +21,10 @@ votingsys_1(struct svc_req *rqstp, register SVCXPRT *transp)
 {
 	union {
 		Credential changepassword_1_arg;
+		char *addvoter_1_arg;
+		Votefor_Param votefor_1_arg;
+		char *votecount_1_arg;
+		Credential viewresult_1_arg;
 	} argument;
 	char *result;
 	xdrproc_t _xdr_argument, _xdr_result;
@@ -35,6 +39,42 @@ votingsys_1(struct svc_req *rqstp, register SVCXPRT *transp)
 		_xdr_argument = (xdrproc_t) xdr_Credential;
 		_xdr_result = (xdrproc_t) xdr_wrapstring;
 		local = (char *(*)(char *, struct svc_req *)) changepassword_1_svc;
+		break;
+
+	case zeroize:
+		_xdr_argument = (xdrproc_t) xdr_void;
+		_xdr_result = (xdrproc_t) xdr_wrapstring;
+		local = (char *(*)(char *, struct svc_req *)) zeroize_1_svc;
+		break;
+
+	case addvoter:
+		_xdr_argument = (xdrproc_t) xdr_wrapstring;
+		_xdr_result = (xdrproc_t) xdr_wrapstring;
+		local = (char *(*)(char *, struct svc_req *)) addvoter_1_svc;
+		break;
+
+	case votefor:
+		_xdr_argument = (xdrproc_t) xdr_Votefor_Param;
+		_xdr_result = (xdrproc_t) xdr_wrapstring;
+		local = (char *(*)(char *, struct svc_req *)) votefor_1_svc;
+		break;
+
+	case listcandidates:
+		_xdr_argument = (xdrproc_t) xdr_void;
+		_xdr_result = (xdrproc_t) xdr_wrapstring;
+		local = (char *(*)(char *, struct svc_req *)) listcandidates_1_svc;
+		break;
+
+	case votecount:
+		_xdr_argument = (xdrproc_t) xdr_wrapstring;
+		_xdr_result = (xdrproc_t) xdr_wrapstring;
+		local = (char *(*)(char *, struct svc_req *)) votecount_1_svc;
+		break;
+
+	case viewresult:
+		_xdr_argument = (xdrproc_t) xdr_Credential;
+		_xdr_result = (xdrproc_t) xdr_wrapstring;
+		local = (char *(*)(char *, struct svc_req *)) viewresult_1_svc;
 		break;
 
 	default:
@@ -57,33 +97,9 @@ votingsys_1(struct svc_req *rqstp, register SVCXPRT *transp)
 	return;
 }
 
-/*intialize global variables*/
-Candidate *chead = NULL;
-Voter *vhead = NULL;
-int shut_down = 0;
-char buffer[BUF_SIZE] = "";
-char response[BUF_SIZE] = "";
-char username[BUF_SIZE] = "";
-char pwd[BUF_SIZE] = "";
-
-
 int
 main (int argc, char **argv)
 {
-	//set up default username and password
-	if(argc == 1){
-		strcpy(username,"cis505");
-		strcpy(pwd, "project2");
-	}
-	else if (argc == 3){
-		strcpy(username, argv[1]);
-		strcpy(pwd, argv[2]);
-	}
-	else{
-		fprintf(stderr,"Argument mis-match.");
-		exit(1);
-	}
-
 	register SVCXPRT *transp;
 
 	pmap_unset (VOTINGSYS, VOTINGSYS_V1);

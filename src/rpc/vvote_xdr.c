@@ -46,3 +46,15 @@ xdr_Credential (XDR *xdrs, Credential *objp)
 		 return FALSE;
 	return TRUE;
 }
+
+bool_t
+xdr_Votefor_Param (XDR *xdrs, Votefor_Param *objp)
+{
+	register int32_t *buf;
+
+	 if (!xdr_string (xdrs, &objp->candi_name, BUF_SIZE))
+		 return FALSE;
+	 if (!xdr_int (xdrs, &objp->voterid))
+		 return FALSE;
+	return TRUE;
+}

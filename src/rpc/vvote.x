@@ -20,8 +20,18 @@ struct Credential {
 	string newpassword<BUF_SIZE>;
 };
 
+struct Votefor_Param{
+	string candi_name<BUF_SIZE>;
+	int voterid;
+};
 program VOTINGSYS {
 	version VOTINGSYS_V1 {
 		string changepassword(Credential) = 1;
+		string zeroize(void) = 2;
+		string addvoter(string) = 3;
+		string votefor(Votefor_Param) = 4;
+		string listcandidates(void) = 5;
+		string votecount(string) = 6;
+		string viewresult(Credential) = 7;
 	} = 1;
 } = 0x2fffffff;

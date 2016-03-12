@@ -39,3 +39,21 @@ char ** changepassword_1_svc(Credential *credential, struct svc_req *req){
 		return (&result);
 	}
 }
+
+char ** zeroize_1_svc(void *, struct svc_req *req){
+}
+
+char ** addvoter_1_svc(char ** voterid, struct svc_req *req){
+}
+
+char ** votefor_1_svc(Votefor_Param *votefor_param, struct svc_req *req){
+}
+
+char ** listcandidates_1_svc(void *, struct svc_req *req){
+}
+
+char ** votecount_1_svc(char **name, struct svc_req *req){
+}
+
+char ** viewresult_1_svc(Credential *cred, struct svc_req *req){
+}

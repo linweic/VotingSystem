@@ -23,3 +23,93 @@ changepassword_1(Credential *argp, CLIENT *clnt)
 	}
 	return (&clnt_res);
 }
+
+char **
+zeroize_1(void *argp, CLIENT *clnt)
+{
+	static char *clnt_res;
+
+	memset((char *)&clnt_res, 0, sizeof(clnt_res));
+	if (clnt_call (clnt, zeroize,
+		(xdrproc_t) xdr_void, (caddr_t) argp,
+		(xdrproc_t) xdr_wrapstring, (caddr_t) &clnt_res,
+		TIMEOUT) != RPC_SUCCESS) {
+		return (NULL);
+	}
+	return (&clnt_res);
+}
+
+char **
+addvoter_1(char **argp, CLIENT *clnt)
+{
+	static char *clnt_res;
+
+	memset((char *)&clnt_res, 0, sizeof(clnt_res));
+	if (clnt_call (clnt, addvoter,
+		(xdrproc_t) xdr_wrapstring, (caddr_t) argp,
+		(xdrproc_t) xdr_wrapstring, (caddr_t) &clnt_res,
+		TIMEOUT) != RPC_SUCCESS) {
+		return (NULL);
+	}
+	return (&clnt_res);
+}
+
+char **
+votefor_1(Votefor_Param *argp, CLIENT *clnt)
+{
+	static char *clnt_res;
+
+	memset((char *)&clnt_res, 0, sizeof(clnt_res));
+	if (clnt_call (clnt, votefor,
+		(xdrproc_t) xdr_Votefor_Param, (caddr_t) argp,
+		(xdrproc_t) xdr_wrapstring, (caddr_t) &clnt_res,
+		TIMEOUT) != RPC_SUCCESS) {
+		return (NULL);
+	}
+	return (&clnt_res);
+}
+
+char **
+listcandidates_1(void *argp, CLIENT *clnt)
+{
+	static char *clnt_res;
+
+	memset((char *)&clnt_res, 0, sizeof(clnt_res));
+	if (clnt_call (clnt, listcandidates,
+		(xdrproc_t) xdr_void, (caddr_t) argp,
+		(xdrproc_t) xdr_wrapstring, (caddr_t) &clnt_res,
+		TIMEOUT) != RPC_SUCCESS) {
+		return (NULL);
+	}
+	return (&clnt_res);
+}
+
+char **
+votecount_1(char **argp, CLIENT *clnt)
+{
+	static char *clnt_res;
+
+	memset((char *)&clnt_res, 0, sizeof(clnt_res));
+	if (clnt_call (clnt, votecount,
+		(xdrproc_t) xdr_wrapstring, (caddr_t) argp,
+		(xdrproc_t) xdr_wrapstring, (caddr_t) &clnt_res,
+		TIMEOUT) != RPC_SUCCESS) {
+		return (NULL);
+	}
+	return (&clnt_res);
+}
+
+char **
+viewresult_1(Credential *argp, CLIENT *clnt)
+{
+	static char *clnt_res;
+
+	memset((char *)&clnt_res, 0, sizeof(clnt_res));
+	if (clnt_call (clnt, viewresult,
+		(xdrproc_t) xdr_Credential, (caddr_t) argp,
+		(xdrproc_t) xdr_wrapstring, (caddr_t) &clnt_res,
+		TIMEOUT) != RPC_SUCCESS) {
+		return (NULL);
+	}
+	return (&clnt_res);
+}

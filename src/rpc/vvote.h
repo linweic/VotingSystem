@@ -38,6 +38,12 @@ struct Credential {
 };
 typedef struct Credential Credential;
 
+struct Votefor_Param {
+	char *candi_name;
+	int voterid;
+};
+typedef struct Votefor_Param Votefor_Param;
+
 /*GLOBAL VARIABLES*/
 extern Candidate *chead;
 extern Voter *vhead;
@@ -47,6 +53,18 @@ extern char response[BUF_SIZE];
 extern char username[BUF_SIZE];
 extern char pwd[BUF_SIZE];
 
+/*HELPER METHODS DECLARE*/
+extern void printvoters(Voter*);
+extern void printcandidates(Candidate*);
+extern void deleCanList(Candidate**);
+extern void deleVoList(Voter**);
+extern Voter *search_voter(Voter **, int);
+extern u_int check_credential(char *, char *, char *);
+extern void bubble(Candidate **, Candidate *);
+extern void exchangeContent(Candidate *, Candidate *);
+extern void find_max(Candidate **, char *);
+extern Candidate *getTail(Candidate*);
+
 #define VOTINGSYS 0x2fffffff
 #define VOTINGSYS_V1 1
 
@@ -54,12 +72,48 @@ extern char pwd[BUF_SIZE];
 #define changepassword 1
 extern  char ** changepassword_1(Credential *, CLIENT *);
 extern  char ** changepassword_1_svc(Credential *, struct svc_req *);
+#define zeroize 2
+extern  char ** zeroize_1(void *, CLIENT *);
+extern  char ** zeroize_1_svc(void *, struct svc_req *);
+#define addvoter 3
+extern  char ** addvoter_1(char **, CLIENT *);
+extern  char ** addvoter_1_svc(char **, struct svc_req *);
+#define votefor 4
+extern  char ** votefor_1(Votefor_Param *, CLIENT *);
+extern  char ** votefor_1_svc(Votefor_Param *, struct svc_req *);
+#define listcandidates 5
+extern  char ** listcandidates_1(void *, CLIENT *);
+extern  char ** listcandidates_1_svc(void *, struct svc_req *);
+#define votecount 6
+extern  char ** votecount_1(char **, CLIENT *);
+extern  char ** votecount_1_svc(char **, struct svc_req *);
+#define viewresult 7
+extern  char ** viewresult_1(Credential *, CLIENT *);
+extern  char ** viewresult_1_svc(Credential *, struct svc_req *);
 extern int votingsys_1_freeresult (SVCXPRT *, xdrproc_t, caddr_t);
 
 #else /* K&R C */
 #define changepassword 1
 extern  char ** changepassword_1();
 extern  char ** changepassword_1_svc();
+#define zeroize 2
+extern  char ** zeroize_1();
+extern  char ** zeroize_1_svc();
+#define addvoter 3
+extern  char ** addvoter_1();
+extern  char ** addvoter_1_svc();
+#define votefor 4
+extern  char ** votefor_1();
+extern  char ** votefor_1_svc();
+#define listcandidates 5
+extern  char ** listcandidates_1();
+extern  char ** listcandidates_1_svc();
+#define votecount 6
+extern  char ** votecount_1();
+extern  char ** votecount_1_svc();
+#define viewresult 7
+extern  char ** viewresult_1();
+extern  char ** viewresult_1_svc();
 extern int votingsys_1_freeresult ();
 #endif /* K&R C */
 
@@ -69,11 +123,13 @@ extern int votingsys_1_freeresult ();
 extern  bool_t xdr_Candidate (XDR *, Candidate*);
 extern  bool_t xdr_Voter (XDR *, Voter*);
 extern  bool_t xdr_Credential (XDR *, Credential*);
+extern  bool_t xdr_Votefor_Param (XDR *, Votefor_Param*);
 
 #else /* K&R C */
 extern bool_t xdr_Candidate ();
 extern bool_t xdr_Voter ();
 extern bool_t xdr_Credential ();
+extern bool_t xdr_Votefor_Param ();
 
 #endif /* K&R C */
 

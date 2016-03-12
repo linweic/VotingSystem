@@ -49,19 +49,115 @@ char ** zeroize_1_svc(void *, struct svc_req *req){
 }
 
 char ** addvoter_1_svc(char ** voterid, struct svc_req *req){
-	
+	static char *result;
+	int id = atoi(voterid);
+	if(id == 0) {
+		result = "ERROR: invalid voter id.";
+		return &result;
+	} 	
+	if(search_voter(&vhead, id)!= NULL){
+		result = "EXISTS";
+		return &result;	
+	}
+	Voter *voter = (Voter*) malloc(sizeof(Voter));
+	if(voter == NULL) {
+		result = "ERROR: Failed to allocate memory to voter pointer. ";
+		return &result;
+	}
+	voter->id = id;
+	voter->voted = 0;
+	voter->next = vhead;
+	vhead = voter;
+	result = "OK";
+	return &result;
 }
 
 char ** votefor_1_svc(Votefor_Param *votefor_param, struct svc_req *req){
+	static char *result;
+	Voter *voter = search_voter(&vhead, votefor_param->voterid);
+	if(voter == NULL){//voter does not exist
+		result = "NOTAVOTER";
+		return &result;	
+	}
+	else if((voter->voted) == 1){//voter already voted
+		result = "ALREADYVOTED";
+		return &result;		
+	}
+	
+	Candidate *ptr = chead;
+	while(ptr != NULL){
+		int cmp = strcmp(voterfor_param->candi_name, ptr->name);
+		if(cmp == 0){
+			//candidate's name already exists, increment votes
+			(ptr->votes) += 1;
+			//mark voter as voted
+			voter->voted = 1;
+			bubble(&chead, ptr);
+			result = "EXISTS";
+			return &result;
+		}
+		ptr = ptr->next;
+	}
+	//candiate does not exist, add new candidate, set votes as 1
+	ptr = (Candidate*) malloc(sizeof(Candidate));
+	int len = strlen(votefor_param->candi_name) + 1;//length of candidate name including null terminator
+	ptr->name = (char*)malloc(len * sizeof(char));
+	strcpy(ptr->name, votefor_param->candi_name);
+	ptr->votes = 1;
+	ptr->next = chead;
+	chead = ptr;
+	//mark voter as voted
+	voter->voted = 1;
+	
+	result = "NEW";
+	return &result;
 }
 
 char ** listcandidates_1_svc(void *, struct svc_req *req){
+	*response = '\0';
+	Candidate *cur = chead;
+	while(cur!=NULL){
+		strcat(response, cur->name);
+		strcat(response, "\n");
+		cur = cur -> next;
+	}
+	return &response;	
 }
 
 char ** votecount_1_svc(char **name, struct svc_req *req){
+	Candidate *cur = chead;
+	while(cur != NULL){
+		int cmp = strcmp(cur->name, *name);
+		if(cmp == 0){
+			sprintf(response, "%d", cur->votes);
+			return &response;
+		}
+		cur = cur -> next;
+	}
+	sprintf(response, "%d", -1);
+	return &response;
 }
 
 char ** viewresult_1_svc(Credential *cred, struct svc_req *req){
+	*response = '\0';
+	if(check_credential(cred, username, pwd) == 0){
+		//find winner or tie
+		find_max(&chead, response);
+		strcat(response,"\n");
+		Candidate *cur = chead;
+		//append all candidates and their votes to response
+		while(cur != NULL){
+			strcat(response, cur->name);
+			strcat(response, "\t");
+			char *votes_num = (char*)malloc(10);
+			sprintf(votes_num, "%d\n", cur->votes);
+			strcat(response, votes_num);
+			free(votes_num);
+			cur = cur->next;
+		}
+	}
+	else strcpy(response, "UNAUTHORIZED");
+	return &response;	
 }
 
 void printvoters(Voter *head){
@@ -107,6 +203,16 @@ Voter *search_voter(Voter **head_ref, int id){
 		cur = cur->next;
 	}
 	return NULL;
+}
+
+u_int check_credential(Credential *cred, char *username, char *password){
+	if(cred->username == NULL || cred->password == NULL){
+		return 1;
+	}	
+	int name_cmp = strcmp(username, cred->username);
+	int pwd_cmp = strcmp(password, cred->password);
+	if(name_cmp == 0 && pwd_cmp == 0) return 0; //credentials match
+	else return 1;//credential does not match
 }
 
 //This method makes sure candidates with most votes stay at the end of the list

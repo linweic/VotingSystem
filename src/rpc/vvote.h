@@ -59,7 +59,7 @@ extern void printcandidates(Candidate*);
 extern void deleCanList(Candidate**);
 extern void deleVoList(Voter**);
 extern Voter *search_voter(Voter **, int);
-extern u_int check_credential(char *, char *, char *);
+extern u_int check_credential(Credential *, char *, char *);
 extern void bubble(Candidate **, Candidate *);
 extern void exchangeContent(Candidate *, Candidate *);
 extern void find_max(Candidate **, char *);

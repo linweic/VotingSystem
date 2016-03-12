@@ -2,4 +2,5 @@ bin/*
 sh/*
 src/rpc/bin/change-password
 src/rpc/bin/change-password
+src/rpc/bin/*.o
 .DS_Store

@@ -107,8 +107,9 @@ char ** votefor_1_svc(Votefor_Param *votefor_param, struct svc_req *req){
 	}
 	//candiate does not exist, add new candidate, set votes as 1
 	ptr = (Candidate*) malloc(sizeof(Candidate));
-	int len = strlen(votefor_param->candi_name) + 1;//length of candidate name including null terminator
-	ptr->name = (char*)malloc(len * sizeof(char));
+	//int len = strlen(votefor_param->candi_name) + 1;//length of candidate name including null terminator
+	//ptr->name = (char*)malloc(len * sizeof(char));
+	ptr->name = (char*)malloc(BUF_SIZE);
 	strcpy(ptr->name, votefor_param->candi_name);
 	ptr->votes = 1;
 	ptr->next = chead;
@@ -122,52 +123,61 @@ char ** votefor_1_svc(Votefor_Param *votefor_param, struct svc_req *req){
 }
 
 char ** listcandidates_1_svc(void *ptr, struct svc_req *req){
-	printf("entering list candidates call.\n");
-	response[0] = '\0';
+	//printf("entering list candidates call.\n");
+	static char *result = NULL;
+	if(result == NULL) result = (char*)malloc(BUF_SIZE * sizeof(char));
+	//response[0] = '\0';
+	result[0] = '\0';
 	Candidate *cur = chead;
 	while(cur!=NULL){
-		strcat(response, cur->name);
-		strcat(response, "\n");
+		strcat(result, cur->name);
+		strcat(result, "\n");
 		cur = cur -> next;
 	}
-	printf("%s", response);
-	return response;	
+	printf("%s", result);
+	return &result;	
 }
 
 char ** votecount_1_svc(char **name, struct svc_req *req){
 	Candidate *cur = chead;
+	static char *result = NULL;
+	if(result == NULL) result = (char*)malloc(BUF_SIZE * sizeof(char));
+	result[0] = '\0';	
 	while(cur != NULL){
 		int cmp = strcmp(cur->name, *name);
 		if(cmp == 0){
-			sprintf(response, "%d", cur->votes);
-			return &response;
+			sprintf(result, "%d", cur->votes);
+			return &result;
 		}
 		cur = cur -> next;
 	}
-	sprintf(response, "%d", -1);
-	return &response;
+	sprintf(result, "%d", -1);
+	return &result;
 }
 
 char ** viewresult_1_svc(Credential *cred, struct svc_req *req){
-	*response = '\0';
+	//*response = '\0';
+	static char *result = NULL;
+	if(result == NULL) result = (char*)malloc(BUF_SIZE * sizeof(char));
+	result[0] = '\0';
 	if(check_credential(cred, username, pwd) == 0){
 		//find winner or tie
-		find_max(&chead, response);
-		strcat(response,"\n");
+		find_max(&chead, result);
+		strcat(result,"\n");
 		Candidate *cur = chead;
 		//append all candidates and their votes to response
 		while(cur != NULL){
-			strcat(response, cur->name);
-			strcat(response, "\t");
+			strcat(result, cur->name);
+			strcat(result, "\t");
 			char *votes_num = (char*)malloc(10);
 			sprintf(votes_num, "%d\n", cur->votes);
-			strcat(response, votes_num);
+			strcat(result, votes_num);
 			free(votes_num);
 			cur = cur->next;
 		}
 	}
-	else strcpy(response, "UNAUTHORIZED");
-	return &response;	
+	else strcpy(result, "UNAUTHORIZED");
+	return &result;	
 }
 
 void printvoters(Voter *head){
@@ -230,7 +240,7 @@ u_int check_credential(Credential *cred, char *username, char *password){
 void bubble(Candidate **head_ref, Candidate *candidate){
 	//If candidate already at the end of the list, do nothing
 	if(candidate->next == NULL) return;
-	Candidate* prev = candidate;
+	//Candidate* prev = candidate;
 	Candidate* cur = candidate->next;
 	//go through the node from candidate to end, 
 	//if cur has fewer votes than candidate, check its next
@@ -252,7 +262,8 @@ void exchangeContent(Candidate *can1, Candidate *can2){
 	char *tmp_name = (char*) malloc(BUF_SIZE);
 	strcpy(tmp_name, can1->name);
 	int tmp_votes = can1->votes;
-	strncpy(can1->name, can2->name, sizeof(can2->name));
+	//strncpy(can1->name, can2->name, sizeof(can2->name));
+	strcpy(can1->name, can2->name);
 	can1->votes = can2->votes;
 	strncpy(can2->name, tmp_name, BUF_SIZE);
 	can2->votes = tmp_votes;
@@ -266,7 +277,7 @@ void find_max(Candidate** head_ref, char* response){
 		return;
 	}
 	Candidate *cur = *head_ref;
-	int max = tail->votes;
+	//int max = tail->votes;
 	//find the starting point of all the winners
 	while(cur->votes != tail->votes){
 		cur = cur->next;

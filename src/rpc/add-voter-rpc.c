@@ -26,6 +26,6 @@ int main(int argc, char *argv[])
 		clnt_perror(cl,argv[1]);
         exit(1);
 	}
-    printf("%s\n", *result);
+	printf("%s\n", *result);
 	return 0;
 }

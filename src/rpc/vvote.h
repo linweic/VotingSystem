@@ -65,6 +65,8 @@ extern void exchangeContent(Candidate *, Candidate *);
 extern void find_max(Candidate **, char *);
 extern Candidate *getTail(Candidate*);
 
+extern void error(const char*);
+
 #define VOTINGSYS 0x2fffffff
 #define VOTINGSYS_V1 1
 

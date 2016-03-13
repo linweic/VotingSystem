@@ -74,6 +74,8 @@ char ** addvoter_1_svc(char ** voterid, struct svc_req *req){
 
 char ** votefor_1_svc(Votefor_Param *votefor_param, struct svc_req *req){
 	static char *result;
+	printf("[DEBUG]candidate name is: %s\n", votefor_param->candi_name);
+	printf("[DEBUG]voter id is: %d\n", votefor_param->voterid);
 	Voter *voter = search_voter(&vhead, votefor_param->voterid);
 	if(voter == NULL){//voter does not exist
 		result = "NOTAVOTER";

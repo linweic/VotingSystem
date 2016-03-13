@@ -175,9 +175,13 @@ char ** viewresult_1_svc(Credential *cred, struct svc_req *req){
 			free(votes_num);
 			cur = cur->next;
 		}
+		svc_exit();
+		return &result;
 	}
-	else strcpy(result, "UNAUTHORIZED");
-	return &result;	
+	else{
+		 strcpy(result, "UNAUTHORIZED");
+		return &result;
+	}	
 }
 
 void printvoters(Voter *head){

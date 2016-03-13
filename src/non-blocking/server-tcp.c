@@ -130,9 +130,9 @@ int main (int argc, char *argv[])
 		FD_SET(sockfd, &read_set);
 		time_out.tv_sec = 5;
 		time_out.tv_usec = 0;
-		retval = select(sock+1, &read_set, NULL, NULL, &time_out);
+		retval = select(sockfd+1, &read_set, NULL, NULL, &time_out);
 
-		if(retval == -1){
+		if(retval < 0){
 			perror("select::");
 		}
 		else if(retval){
@@ -147,63 +147,63 @@ int main (int argc, char *argv[])
 				/*first receieve the identifier*/
 				recv_len = recv(new_sockfd, buffer, 1, 0);
 				check_recv(recv_len, buffer);
-				printf("\"%c\" receieved, length: %d\n", buffer[0], recv_len);
+				//printf("\"%c\" receieved, length: %d\n", buffer[0], recv_len);
 				
 				switch(buffer[0]){
 					case '1':
-						printf("invoke change-password method\n");
+						//printf("invoke change-password method\n");
 						recv_len =recv(new_sockfd, buffer, BUF_SIZE, 0);
 						check_recv(recv_len, buffer);
-						printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
+						//printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
 						strcpy(response, changepassword(buffer, username, pwd));
 						send_resp(&new_sockfd, response, strlen(response));
-						printf("current password is \"%s\"\n", pwd);
+						//printf("current password is \"%s\"\n", pwd);
 						break;
 					case '2':
-						printf("invoke zeroize\n");
+						//printf("invoke zeroize\n");
 						strcpy(response, zeroize(&chead, &vhead));
 						//voter_count = 0;
 						send_resp(&new_sockfd, response, strlen(response));
 
 						break;
 					case '3':
-						printf("invoke addvoter\n");
+						//printf("invoke addvoter\n");
 						recv_len = recv(new_sockfd, buffer, BUF_SIZE, 0);
 						check_recv(recv_len, buffer);
-						printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
+						//printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
 						strcpy(response, addvoter(buffer, &vhead));
 						send_resp(&new_sockfd, response, strlen(response));
-						printvoters(vhead);
+						//printvoters(vhead);
 						break;
 					case '4':
-						printf("invoke votefor\n");
+						//printf("invoke votefor\n");
 						recv_len = recv(new_sockfd, buffer, BUF_SIZE, 0);
 						check_recv(recv_len, buffer);
-						printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
+						//printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
 						strcpy(response, votefor(buffer, &vhead, &chead));
 						send_resp(&new_sockfd, response, strlen(response));
-						printvoters(vhead);
-						printcandidates(chead);
+						//printvoters(vhead);
+						//printcandidates(chead);
 						break;
 					case '5':
-						printf("invoke listcandidates\n");
+						//printf("invoke listcandidates\n");
 						listcandidates(chead, response);
 						send_resp(&new_sockfd, response, strlen(response));
 										
 						break;
 					case '6':
-						printf("invoke votecount\n");
+						//printf("invoke votecount\n");
 						recv_len = recv(new_sockfd, buffer, BUF_SIZE, 0);
 						check_recv(recv_len, buffer);
-						printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
+						//printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
 						votecount(&chead, buffer, response);
 						send_resp(&new_sockfd, response, strlen(response));
 						break;
 					case '7':
-						printf("invoke viewresult\n");
+						//printf("invoke viewresult\n");
 						recv_len = recv(new_sockfd, buffer, BUF_SIZE, 0);
 						check_recv(recv_len, buffer);
-						printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
+						//printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
 						viewresult(buffer, &chead, username, pwd, response);
 						send_resp(&new_sockfd, response, strlen(response));			
 						if(strcmp(response,"UNAUTHORIZED") != 0){
@@ -212,7 +212,7 @@ int main (int argc, char *argv[])
 						}
 						break;
 					default:
-						printf("illegal identifier.\n");
+						//printf("illegal identifier.\n");
 						strcpy(response, "illegal identifier");
 						send_resp(&new_sockfd, response, strlen(response));
 						break;
@@ -223,9 +223,11 @@ int main (int argc, char *argv[])
 				fprintf(stderr, "sockfd is not in the read_set.\n");
 			}
 		}
+		/*
 		else{
 			fprintf(stderr, "Server time out.\n");
 		}
+		*/
 		close(new_sockfd);
 	}
 	close(sockfd);
@@ -257,7 +259,7 @@ void check_send(int len){
 void send_resp(int *sockfd, char *response, int len){
 	int send_len = send( *sockfd, response, len, 0);
 	check_send(send_len);
-	printf("\"%s\" has been sent to client, length: %d\n", response, send_len);
+	//printf("\"%s\" has been sent to client, length: %d\n", response, send_len);
 }
 void printvoters(struct Voter *head){
 	while(head != NULL){
@@ -341,13 +343,13 @@ short check_credential(char *buffer, char *username, char *password){
 	token = strtok(buffer, delim);
 	if(token == NULL) return 1;
 	//compare username
-	printf("[DEBUG]token_1 is \"%s\"\n", token);
+	//printf("[DEBUG]token_1 is \"%s\"\n", token);
 	int usr_cmp = strcmp(username, token);
 	//parse password
 	token = strtok(NULL, delim);
 	if(token == NULL) return 1;
 	//compare password
-	printf("[DEBUG]token_2 is \"%s\"\n", token);
+	//printf("[DEBUG]token_2 is \"%s\"\n", token);
 	int pwd_cmp = strcmp(password, token);
 	if(usr_cmp == 0 && pwd_cmp == 0){ return 0;}
 	else return 1;
@@ -392,25 +394,25 @@ char *changepassword(char *buffer, char *username, char *password){
 	token = strtok(buffer, delim);
 	if(token == NULL) return "FALSE";
 	//compare username
-	printf("[DEBUG]token_1 is \"%s\"\n", token);
+	//printf("[DEBUG]token_1 is \"%s\"\n", token);
 	int usr_cmp = strcmp(username, token);
 	//parse password
 	token = strtok(NULL, delim);
 	if(token == NULL) return "FALSE";
 	//compare password
-	printf("[DEBUG]token_2 is \"%s\"\n", token);
+	//printf("[DEBUG]token_2 is \"%s\"\n", token);
 	int pwd_cmp = strcmp(password, token);
 	if(usr_cmp == 0 && pwd_cmp == 0){
 		//client provides a matching pair of username and password
 		//so update password
 		token = strtok(NULL, delim);
-		if(token == NULL) return "FALSE: Please provide a new password.";
-		printf("[DEBUG]token_3 is \"%s\"\n", token);
+		if(token == NULL) return "FALSE";
+		//printf("[DEBUG]token_3 is \"%s\"\n", token);
 		strcpy(password, token);
 		return "OK";
 	}
 	else{
-		return "FALSE: your username or password is not correct.";
+		return "FALSE";
 	}
 }
 
@@ -427,12 +429,12 @@ char *zeroize(struct Candidate** chead_ref, struct Voter** vhead_ref){
 **/
 char *addvoter(char *buffer, struct Voter** vhead_ref){
 	int id = atoi(buffer);
-	if(id == 0) return "ERROR: invalid voter id.";
+	if(id == 0) return "ERROR";
 
 	if(search_voter(vhead_ref, id)!= NULL) return "EXISTS";
 	//add new voter, set voted as 0
 	struct Voter* voter = (struct Voter*) malloc(sizeof(struct Voter));
-	if(voter == NULL) return "ERROR: allocate memory to voter pointer failed";
+	if(voter == NULL) return "ERROR";
 	voter -> id  = id;
 	voter -> voted = 0;
 	voter -> next = *vhead_ref;
@@ -448,16 +450,16 @@ char *votefor(char *buffer, struct Voter **vhead_ref, struct Candidate **chead_r
 	//parse candidate name
 	token = strtok(buffer, delim);
 	if(token == NULL) return "ERROR";
-	printf("[DEBUG]token_1 is \"%s\"\n", token);
+	//printf("[DEBUG]token_1 is \"%s\"\n", token);
 	name = (char *) alloca(strlen(token)+1);
 	strcpy(name, token);
 
 	//parse voterid
 	token = strtok(NULL, delim);
 	if(token == NULL) return "ERROR";
-	printf("[DEBUG]token_2 is \"%s\"\n", token);
+	//printf("[DEBUG]token_2 is \"%s\"\n", token);
 	id = atoi(token);
-	if(id == 0) return "ERROR: invalid voter id.";
+	if(id == 0) return "ERROR";
 
 	//check if voter id exists
 	struct Voter *voter = search_voter(vhead_ref, id);

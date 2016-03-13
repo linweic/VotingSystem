@@ -3,4 +3,5 @@ sh/*
 src/rpc/bin/[^Makefile]*
 src/rpc/bin/*-rpc
 src/rpc/bin/*.o
+src/non-blocking/bin/*
 .DS_Store

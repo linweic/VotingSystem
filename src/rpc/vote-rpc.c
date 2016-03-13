@@ -10,18 +10,18 @@ int main(int argc, char *argv[])
 	Votefor_Param *param;
 	
 	if(argc != 4){
-        fprintf(stderr, "Argument mis-match.\n");
-        exit(1);
-    }
+		fprintf(stderr, "Argument mis-match.\n");
+		exit(1);
+	}
 	//*candi_name = argv[2];
 	//*voter_id = argv[3];
 
 	cl = clnt_create(argv[1], VOTINGSYS, VOTINGSYS_V1, "tcp");
-    if (cl == NULL) {
-        printf("error: could not connect to server.\n");
-        return 1;
-    }
-    printf("Client connects to server successfully.\n");
+	if (cl == NULL) {
+		printf("error: could not connect to server.\n");
+		return 1;
+	}
+	printf("Client connects to server successfully.\n");
 
 	//Construct Votefor_Param
 	param = (Votefor_Param*) malloc(sizeof(Votefor_Param));
@@ -36,10 +36,10 @@ int main(int argc, char *argv[])
 	//call remote procedure
 	result = votefor_1(param, cl);
 	if (result == NULL) {
-        clnt_perror(cl,argv[1]);
-        exit(1);
-    }
-    printf("%s\n", *result);
+		clnt_perror(cl,argv[1]);
+		exit(1);
+	}
+	printf("%s\n", *result);
 	free(param->candi_name);
 	free(param);
 	return 0;

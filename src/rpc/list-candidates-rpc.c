@@ -5,7 +5,7 @@
 
 int main(int argc, char *argv[])
 {
-	CLIENT *cl;
+    CLIENT *cl;
     void *ptr = NULL;
     char **result;
     

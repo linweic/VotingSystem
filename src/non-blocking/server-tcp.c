@@ -137,90 +137,94 @@ int main (int argc, char *argv[])
 		}
 		else if(retval){
 			if(FD_ISSET(sockfd, &read_set)){
+				addr_size = sizeof(incoming_addr);
+				if((new_sockfd = accept(sockfd, (struct sockaddr *) &incoming_addr, &addr_size))<0){
+					perror("simplex-talk: accept");
+					continue;
+				}
+				printf("request accepted.\n");
+
+				/*first receieve the identifier*/
+				recv_len = recv(new_sockfd, buffer, 1, 0);
+				check_recv(recv_len, buffer);
+				printf("\"%c\" receieved, length: %d\n", buffer[0], recv_len);
+				
+				switch(buffer[0]){
+					case '1':
+						printf("invoke change-password method\n");
+						recv_len =recv(new_sockfd, buffer, BUF_SIZE, 0);
+						check_recv(recv_len, buffer);
+						printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
+						strcpy(response, changepassword(buffer, username, pwd));
+						send_resp(&new_sockfd, response, strlen(response));
+						printf("current password is \"%s\"\n", pwd);
+						break;
+					case '2':
+						printf("invoke zeroize\n");
+						strcpy(response, zeroize(&chead, &vhead));
+						//voter_count = 0;
+						send_resp(&new_sockfd, response, strlen(response));
+
+						break;
+					case '3':
+						printf("invoke addvoter\n");
+						recv_len = recv(new_sockfd, buffer, BUF_SIZE, 0);
+						check_recv(recv_len, buffer);
+						printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
+						strcpy(response, addvoter(buffer, &vhead));
+						send_resp(&new_sockfd, response, strlen(response));
+						printvoters(vhead);
+						break;
+					case '4':
+						printf("invoke votefor\n");
+						recv_len = recv(new_sockfd, buffer, BUF_SIZE, 0);
+						check_recv(recv_len, buffer);
+						printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
+						strcpy(response, votefor(buffer, &vhead, &chead));
+						send_resp(&new_sockfd, response, strlen(response));
+						printvoters(vhead);
+						printcandidates(chead);
+						break;
+					case '5':
+						printf("invoke listcandidates\n");
+						listcandidates(chead, response);
+						send_resp(&new_sockfd, response, strlen(response));
+										
+						break;
+					case '6':
+						printf("invoke votecount\n");
+						recv_len = recv(new_sockfd, buffer, BUF_SIZE, 0);
+						check_recv(recv_len, buffer);
+						printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
+						votecount(&chead, buffer, response);
+						send_resp(&new_sockfd, response, strlen(response));
+						break;
+					case '7':
+						printf("invoke viewresult\n");
+						recv_len = recv(new_sockfd, buffer, BUF_SIZE, 0);
+						check_recv(recv_len, buffer);
+						printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
+						viewresult(buffer, &chead, username, pwd, response);
+						send_resp(&new_sockfd, response, strlen(response));			
+						if(strcmp(response,"UNAUTHORIZED") != 0){
+							shutdown = 1;
+							puts("Server shutting down.");
+						}
+						break;
+					default:
+						printf("illegal identifier.\n");
+						strcpy(response, "illegal identifier");
+						send_resp(&new_sockfd, response, strlen(response));
+						break;
+				}
 				
 			}
+			else{
+				fprintf(stderr, "sockfd is not in the read_set.\n");
+			}
 		}
-
-
-		addr_size = sizeof(incoming_addr);
-		if((new_sockfd = accept(sockfd, (struct sockaddr *) &incoming_addr, &addr_size))<0){
-			perror("simplex-talk: accept");
-			continue;
-		}
-		printf("request accepted.\n");
-
-		/*first receieve the identifier*/
-		recv_len = recv(new_sockfd, buffer, 1, 0);
-		check_recv(recv_len, buffer);
-		printf("\"%c\" receieved, length: %d\n", buffer[0], recv_len);
-		
-		switch(buffer[0]){
-			case '1':
-				printf("invoke change-password method\n");
-				recv_len =recv(new_sockfd, buffer, BUF_SIZE, 0);
-				check_recv(recv_len, buffer);
-				printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
-				strcpy(response, changepassword(buffer, username, pwd));
-				send_resp(&new_sockfd, response, strlen(response));
-				printf("current password is \"%s\"\n", pwd);
-				break;
-			case '2':
-				printf("invoke zeroize\n");
-				strcpy(response, zeroize(&chead, &vhead));
-				//voter_count = 0;
-				send_resp(&new_sockfd, response, strlen(response));
-
-				break;
-			case '3':
-				printf("invoke addvoter\n");
-				recv_len = recv(new_sockfd, buffer, BUF_SIZE, 0);
-				check_recv(recv_len, buffer);
-				printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
-				strcpy(response, addvoter(buffer, &vhead));
-				send_resp(&new_sockfd, response, strlen(response));
-				printvoters(vhead);
-				break;
-			case '4':
-				printf("invoke votefor\n");
-				recv_len = recv(new_sockfd, buffer, BUF_SIZE, 0);
-				check_recv(recv_len, buffer);
-				printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
-				strcpy(response, votefor(buffer, &vhead, &chead));
-				send_resp(&new_sockfd, response, strlen(response));
-				printvoters(vhead);
-				printcandidates(chead);
-				break;
-			case '5':
-				printf("invoke listcandidates\n");
-				listcandidates(chead, response);
-				send_resp(&new_sockfd, response, strlen(response));
-								
-				break;
-			case '6':
-				printf("invoke votecount\n");
-				recv_len = recv(new_sockfd, buffer, BUF_SIZE, 0);
-				check_recv(recv_len, buffer);
-				printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
-				votecount(&chead, buffer, response);
-				send_resp(&new_sockfd, response, strlen(response));
-				break;
-			case '7':
-				printf("invoke viewresult\n");
-				recv_len = recv(new_sockfd, buffer, BUF_SIZE, 0);
-				check_recv(recv_len, buffer);
-				printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
-				viewresult(buffer, &chead, username, pwd, response);
-				send_resp(&new_sockfd, response, strlen(response));			
-				if(strcmp(response,"UNAUTHORIZED") != 0){
-					shutdown = 1;
-					puts("Server shutting down.");
-				}
-				break;
-			default:
-				printf("illegal identifier.\n");
-				strcpy(response, "illegal identifier");
-				send_resp(&new_sockfd, response, strlen(response));
-				break;
+		else{
+			fprintf(stderr, "Server time out.\n");
 		}
 		close(new_sockfd);
 	}

@@ -48,7 +48,7 @@ typedef struct Votefor_Param Votefor_Param;
 extern Candidate *chead;
 extern Voter *vhead;
 extern int shut_down;
-extern char buffer[BUF_SIZE];
+//extern char buffer[BUF_SIZE];
 extern char response[BUF_SIZE];
 extern char username[BUF_SIZE];
 extern char pwd[BUF_SIZE];

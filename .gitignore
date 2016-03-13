@@ -1,4 +1,6 @@
 bin/*
 sh/*
 src/rpc/bin/[^Makefile]*
+src/rpc/bin/*-rpc
+src/rpc/bin/*.o
 .DS_Store

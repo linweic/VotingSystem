@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
 	strncpy(cred->username, username, name_len);
 	cred->username[name_len-1] = '\0';
 	int pwd_len = strlen(password)+1;
-	cred->password = (char*)malloc(pwd_len*size(char));
+	cred->password = (char*)malloc(pwd_len * sizeof(char));
 	strncpy(cred->password, password, pwd_len);
 	cred->password[pwd_len-1] = '\0';
 

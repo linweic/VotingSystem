@@ -5,14 +5,14 @@
 
 int main(int argc, char *argv[])
 {
-	char **result, **voterid;
+	char **result;//, **voterid;
 	CLIENT *cl;
 
 	if(argc != 3){
 		fprintf(stderr, "Argument mis-match.\n");
 		exit(1);
 	}
-	*voterid = argv[2];
+	//*voterid = argv[2];
 	cl = clnt_create(argv[1], VOTINGSYS, VOTINGSYS_V1, "tcp");
 	if (cl == NULL) {
         printf("error: could not connect to server.\n");
@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     printf("Client connects to server successfully.\n");
 	
 	//call remote procedure
-	result = addvoter_1(voterid, cl);
+	result = addvoter_1(&argv[2], cl);
 	if (result == NULL) {
         clnt_perror(cl,argv[1]);
         exit(1);

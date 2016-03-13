@@ -40,7 +40,7 @@ char ** changepassword_1_svc(Credential *credential, struct svc_req *req){
 	}
 }
 
-char ** zeroize_1_svc(void *, struct svc_req *req){
+char ** zeroize_1_svc(void *ptr, struct svc_req *req){
 	static char *result;
 	deleVoList(&vhead);
 	deleCanList(&chead);
@@ -50,7 +50,7 @@ char ** zeroize_1_svc(void *, struct svc_req *req){
 
 char ** addvoter_1_svc(char ** voterid, struct svc_req *req){
 	static char *result;
-	int id = atoi(voterid);
+	int id = atoi(*voterid);
 	if(id == 0) {
 		result = "ERROR: invalid voter id.";
 		return &result;
@@ -68,6 +68,9 @@ char ** addvoter_1_svc(char ** voterid, struct svc_req *req){
 	voter->voted = 0;
 	voter->next = vhead;
 	vhead = voter;
+	//for debugging
+	printvoters(vhead);
+
 	result = "OK";
 	return &result;
 }
@@ -88,13 +91,15 @@ char ** votefor_1_svc(Votefor_Param *votefor_param, struct svc_req *req){
 	
 	Candidate *ptr = chead;
 	while(ptr != NULL){
-		int cmp = strcmp(voterfor_param->candi_name, ptr->name);
+		int cmp = strcmp(votefor_param->candi_name, ptr->name);
 		if(cmp == 0){
 			//candidate's name already exists, increment votes
 			(ptr->votes) += 1;
 			//mark voter as voted
 			voter->voted = 1;
 			bubble(&chead, ptr);
+			//for debugging
+			printcandidates(chead);
 			result = "EXISTS";
 			return &result;
 		}
@@ -110,20 +115,23 @@ char ** votefor_1_svc(Votefor_Param *votefor_param, struct svc_req *req){
 	chead = ptr;
 	//mark voter as voted
 	voter->voted = 1;
-	
+	//for debugging
+	printcandidates(chead);	
 	result = "NEW";
 	return &result;
 }
 
-char ** listcandidates_1_svc(void *, struct svc_req *req){
-	*response = '\0';
+char ** listcandidates_1_svc(void *ptr, struct svc_req *req){
+	printf("entering list candidates call.\n");
+	response[0] = '\0';
 	Candidate *cur = chead;
 	while(cur!=NULL){
 		strcat(response, cur->name);
 		strcat(response, "\n");
 		cur = cur -> next;
 	}
-	return &response;	
+	printf("%s", response);
+	return response;	
 }
 
 char ** votecount_1_svc(char **name, struct svc_req *req){
@@ -163,14 +171,14 @@ char ** viewresult_1_svc(Credential *cred, struct svc_req *req){
 }
 
 void printvoters(Voter *head){
-	while(!head == NULL){
+	while(head != NULL){
 		printf("Voter%d, voted:%u\n", head->id, head->voted);
 		head = head->next;
 	}
 }
 
 void printcandidates(Candidate *head){
-	while(!head == NULL){
+	while(head != NULL){
 		printf("Candidate: %s, votes:%d\n", head->name, head->votes);
 		head = head->next;
 	}

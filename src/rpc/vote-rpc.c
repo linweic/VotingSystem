@@ -5,7 +5,7 @@
 
 int main(int argc, char *argv[])
 {
-	char **result, **candi_name, **voter_id;
+	char **result;//, **candi_name, **voter_id;
 	CLIENT *cl;
 	Votefor_Param *param;
 	
@@ -13,8 +13,8 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Argument mis-match.\n");
         exit(1);
     }
-	*candi_name = argv[2];
-	*voter_id = argv[3];
+	//*candi_name = argv[2];
+	//*voter_id = argv[3];
 
 	cl = clnt_create(argv[1], VOTINGSYS, VOTINGSYS_V1, "tcp");
     if (cl == NULL) {
@@ -26,12 +26,12 @@ int main(int argc, char *argv[])
 	//Construct Votefor_Param
 	param = (Votefor_Param*) malloc(sizeof(Votefor_Param));
 	
-	int name_len = strlen(*candi_name)+1;//including null terminator
+	int name_len = strlen(argv[2])+1;//including null terminator
 	param->candi_name = (char*) malloc(name_len * sizeof(char));
-	strncpy(param->candi_name, *candi_name, name_len);
+	strncpy(param->candi_name, argv[2], name_len);
 	param->candi_name[name_len-1] = '\0';
 
-	param->voterid = atoi(*voter_id);
+	param->voterid = atoi(argv[3]);
 
 	//call remote procedure
 	result = votefor_1(param, cl);

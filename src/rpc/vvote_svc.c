@@ -97,9 +97,32 @@ votingsys_1(struct svc_req *rqstp, register SVCXPRT *transp)
 	return;
 }
 
+/*intialize global variables*/
+Candidate *chead = NULL;
+Voter *vhead = NULL;
+int shut_down = 0;
+char buffer[BUF_SIZE] = "";
+char response[BUF_SIZE] = "";
+char username[BUF_SIZE] = "";
+char pwd[BUF_SIZE] = "";
+
 int
 main (int argc, char **argv)
 {
+	/*reading command line arguments*/
+	if(argc == 1){
+		strcpy(username,"cis505");
+		strcpy(pwd, "project2");
+	}
+	else if (argc == 3){
+		strcpy(username, argv[1]);
+		strcpy(pwd, argv[2]);
+	}
+	else{
+		fprintf(stderr,"Argument mis-match.");
+		exit(1);
+	}
+
 	register SVCXPRT *transp;
 
 	pmap_unset (VOTINGSYS, VOTINGSYS_V1);

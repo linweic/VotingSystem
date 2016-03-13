@@ -3,8 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-void error(const char *);
-
 int main(int argc, char *argv[])
 {
     Credential *cred;

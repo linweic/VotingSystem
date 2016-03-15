@@ -10,7 +10,7 @@ char ** changepassword_1_svc(Credential *credential, struct svc_req *req){
 		result = "FALSE";
 		return (&result);
 	}
-	printf("[DEBUG]credential username is \"%s\"\n", credential->username);
+	//printf("[DEBUG]credential username is \"%s\"\n", credential->username);
 	//compare username
 	int usr_cmp = strcmp(credential->username, username);
 	//parse password
@@ -18,7 +18,7 @@ char ** changepassword_1_svc(Credential *credential, struct svc_req *req){
 		result = "FALSE";
 		return (&result);
 	}
-	printf("[DEBUG]credential password is \"%s\"\n", credential->password);
+	//printf("[DEBUG]credential password is \"%s\"\n", credential->password);
 	//compare password
 	int pwd_cmp = strcmp(credential->password, pwd);
 	//parse new password
@@ -26,7 +26,7 @@ char ** changepassword_1_svc(Credential *credential, struct svc_req *req){
 		result = "FALSE";
 		return (&result);
 	}
-	printf("[DEBUG]credential new password is \"%s\"\n", credential->newpassword);
+	//printf("[DEBUG]credential new password is \"%s\"\n", credential->newpassword);
 	
 	if(usr_cmp == 0 && pwd_cmp == 0){
 		//credential matches
@@ -69,7 +69,7 @@ char ** addvoter_1_svc(char ** voterid, struct svc_req *req){
 	voter->next = vhead;
 	vhead = voter;
 	//for debugging
-	printvoters(vhead);
+	//printvoters(vhead);
 
 	result = "OK";
 	return &result;
@@ -77,8 +77,8 @@ char ** addvoter_1_svc(char ** voterid, struct svc_req *req){
 
 char ** votefor_1_svc(Votefor_Param *votefor_param, struct svc_req *req){
 	static char *result;
-	printf("[DEBUG]candidate name is: %s\n", votefor_param->candi_name);
-	printf("[DEBUG]voter id is: %d\n", votefor_param->voterid);
+	//printf("[DEBUG]candidate name is: %s\n", votefor_param->candi_name);
+	//printf("[DEBUG]voter id is: %d\n", votefor_param->voterid);
 	Voter *voter = search_voter(&vhead, votefor_param->voterid);
 	if(voter == NULL){//voter does not exist
 		result = "NOTAVOTER";
@@ -99,7 +99,7 @@ char ** votefor_1_svc(Votefor_Param *votefor_param, struct svc_req *req){
 			voter->voted = 1;
 			bubble(&chead, ptr);
 			//for debugging
-			printcandidates(chead);
+			//printcandidates(chead);
 			result = "EXISTS";
 			return &result;
 		}
@@ -117,70 +117,69 @@ char ** votefor_1_svc(Votefor_Param *votefor_param, struct svc_req *req){
 	//mark voter as voted
 	voter->voted = 1;
 	//for debugging
-	printcandidates(chead);	
+	//printcandidates(chead);	
 	result = "NEW";
 	return &result;
 }
 
 char ** listcandidates_1_svc(void *ptr, struct svc_req *req){
 	//printf("entering list candidates call.\n");
-	static char *result = NULL;
-	if(result == NULL) result = (char*)malloc(BUF_SIZE * sizeof(char));
-	//response[0] = '\0';
-	result[0] = '\0';
+	//static char *result = NULL;
+	if(long_result == NULL) long_result = (char*)malloc(BUF_SIZE * sizeof(char));
+	long_result[0] = '\0';
 	Candidate *cur = chead;
 	while(cur!=NULL){
-		strcat(result, cur->name);
-		strcat(result, "\n");
+		strcat(long_result, cur->name);
+		strcat(long_result, "\n");
 		cur = cur -> next;
 	}
-	printf("%s", result);
-	return &result;	
+	//printf("%s", result);
+	return &long_result;	
 }
 
 char ** votecount_1_svc(char **name, struct svc_req *req){
 	Candidate *cur = chead;
-	static char *result = NULL;
-	if(result == NULL) result = (char*)malloc(BUF_SIZE * sizeof(char));
-	result[0] = '\0';	
+	//static char *result = NULL;
+	if(long_result == NULL) long_result = (char*)malloc(BUF_SIZE * sizeof(char));
+	long_result[0] = '\0';	
 	while(cur != NULL){
 		int cmp = strcmp(cur->name, *name);
 		if(cmp == 0){
-			sprintf(result, "%d", cur->votes);
-			return &result;
+			sprintf(long_result, "%d", cur->votes);
+			return &long_result;
 		}
 		cur = cur -> next;
 	}
-	sprintf(result, "%d", -1);
-	return &result;
+	sprintf(long_result, "%d", -1);
+	return &long_result;
 }
 
 char ** viewresult_1_svc(Credential *cred, struct svc_req *req){
 	//*response = '\0';
-	static char *result = NULL;
-	if(result == NULL) result = (char*)malloc(BUF_SIZE * sizeof(char));
-	result[0] = '\0';
+	//static char *result = NULL;
+	if(long_result == NULL) long_result = (char*)malloc(BUF_SIZE * sizeof(char));
+	long_result[0] = '\0';
 	if(check_credential(cred, username, pwd) == 0){
 		//find winner or tie
-		find_max(&chead, result);
-		strcat(result,"\n");
+		find_max(&chead, long_result);
+		strcat(long_result,"\n");
 		Candidate *cur = chead;
 		//append all candidates and their votes to response
 		while(cur != NULL){
-			strcat(result, cur->name);
-			strcat(result, "\t");
+			strcat(long_result, cur->name);
+			strcat(long_result, "\t");
 			char *votes_num = (char*)malloc(10);
 			sprintf(votes_num, "%d\n", cur->votes);
-			strcat(result, votes_num);
+			strcat(long_result, votes_num);
 			free(votes_num);
 			cur = cur->next;
 		}
-		svc_exit();
-		return &result;
+		shut_down = 1;
+		return &long_result;
 	}
 	else{
-		 strcpy(result, "UNAUTHORIZED");
-		return &result;
+		 strcpy(long_result, "UNAUTHORIZED");
+		return &long_result;
 	}	
 }
 
@@ -203,6 +202,7 @@ void deleCanList(Candidate **head_ref){
 	Candidate *next;
 	while(current != NULL){
 		next = current->next;
+		free(current->name);
 		free(current);
 		current = next;
 	}

@@ -52,6 +52,7 @@ extern int shut_down;
 extern char response[BUF_SIZE];
 extern char username[BUF_SIZE];
 extern char pwd[BUF_SIZE];
+extern char *long_result;
 
 /*HELPER METHODS DECLARE*/
 extern void printvoters(Voter*);

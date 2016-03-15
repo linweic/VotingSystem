@@ -90,9 +90,19 @@ votingsys_1(struct svc_req *rqstp, register SVCXPRT *transp)
 	if (result != NULL && !svc_sendreply(transp, (xdrproc_t) _xdr_result, result)) {
 		svcerr_systemerr (transp);
 	}
+
 	if (!svc_freeargs (transp, (xdrproc_t) _xdr_argument, (caddr_t) &argument)) {
 		fprintf (stderr, "%s", "unable to free arguments");
 		exit (1);
+	}
+	/*shutdown the server*/
+	if(shut_down == 1){
+		deleCanList(&chead);
+		deleVoList(&vhead);
+		free(long_result);
+		//svc_destroy(transp);
+		printf("server shutting down...\n");
+		svc_exit();
 	}
 	return;
 }
@@ -105,6 +115,7 @@ char buffer[BUF_SIZE] = "";
 char response[BUF_SIZE] = "";
 char username[BUF_SIZE] = "";
 char pwd[BUF_SIZE] = "";
+char *long_result = NULL;
 
 int
 main (int argc, char **argv)

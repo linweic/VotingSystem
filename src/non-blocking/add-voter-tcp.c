@@ -18,7 +18,7 @@ int main (int argc, char *argv[])
 	int status, sockfd, send_len, recv_len;
 	struct addrinfo hints;
 	struct addrinfo *servinfo, *res;
-	char buffer[BUF_SIZE],msg[] = ID;
+	char buffer[BUF_SIZE],msg[BUF_SIZE] = ID;
 
 	if(argc != 4){
 		fprintf(stderr, "Argument mis-match.\n");
@@ -28,8 +28,8 @@ int main (int argc, char *argv[])
 	char *serv_addr = argv[1];
 	char *port_num = argv[2];
 	strcpy(buffer, argv[3]);
-	printf("server address is: %s\n", serv_addr);
-	printf("port number is: %s\n", port_num);
+	//printf("server address is: %s\n", serv_addr);
+	//printf("port number is: %s\n", port_num);
 
 	//reset and fill in hints
 	memset(&hints, 0, sizeof(hints));
@@ -61,20 +61,14 @@ int main (int argc, char *argv[])
 	}
 	printf("Client connects to local address and port number.\n");
 	
+	strcat(msg, buffer);
 	//send identifier first
 	send_len = send(sockfd, msg, strlen(msg), 0);
 	if(send_len < 0){
 		error("send identifier ::");
 	}
-	printf("identifier \"%s\" has been sent, length: %d\n", msg, send_len );
-	
-	//send data body next
-	send_len = send(sockfd, buffer, strlen(buffer), 0);
-	if(send_len < 0){
-		error("send::");
-	}
-	printf("\"%s\" has been sent, length: %d\n", buffer, send_len);
-	
+	//printf("msg \"%s\" has been sent, length: %d\n", msg, send_len );
+
 	//receieve response from server
 	recv_len = recv(sockfd, buffer, BUF_SIZE, 0);
 	check_recv(recv_len, buffer);

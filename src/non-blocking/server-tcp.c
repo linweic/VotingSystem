@@ -142,22 +142,16 @@ int main (int argc, char *argv[])
 					perror("simplex-talk: accept");
 					continue;
 				}
-				printf("request accepted.\n");
+				//printf("request accepted.\n");
 
 				/*first receieve the identifier*/
-				recv_len = recv(new_sockfd, buffer, 1, 0);
+				recv_len = recv(new_sockfd, buffer, BUF_SIZE, 0);
 				check_recv(recv_len, buffer);
-				//printf("\"%c\" receieved, length: %d\n", buffer[0], recv_len);
+				printf("\"%s\" receieved, length: %d\n", buffer, recv_len);
 				
 				switch(buffer[0]){
 					case '1':
 						//printf("invoke change-password method\n");
-						recv_len =recv(new_sockfd, buffer, BUF_SIZE, 0);
-						check_recv(recv_len, buffer);
-						//printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
-						strcpy(response, changepassword(buffer, username, pwd));
-						send_resp(&new_sockfd, response, strlen(response));
-						//printf("current password is \"%s\"\n", pwd);
 						break;
 					case '2':
 						//printf("invoke zeroize\n");
@@ -168,19 +162,13 @@ int main (int argc, char *argv[])
 						break;
 					case '3':
 						//printf("invoke addvoter\n");
-						recv_len = recv(new_sockfd, buffer, BUF_SIZE, 0);
-						check_recv(recv_len, buffer);
-						//printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
-						strcpy(response, addvoter(buffer, &vhead));
+						strcpy(response, addvoter(buffer+1, &vhead));
 						send_resp(&new_sockfd, response, strlen(response));
 						//printvoters(vhead);
 						break;
 					case '4':
-						//printf("invoke votefor\n");
-						recv_len = recv(new_sockfd, buffer, BUF_SIZE, 0);
-						check_recv(recv_len, buffer);
-						//printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
-						strcpy(response, votefor(buffer, &vhead, &chead));
+						//printf("invoke vote\n", );
+						strcpy(response, votefor(buffer+1, &vhead, &chead));
 						send_resp(&new_sockfd, response, strlen(response));
 						//printvoters(vhead);
 						//printcandidates(chead);
@@ -193,18 +181,12 @@ int main (int argc, char *argv[])
 						break;
 					case '6':
 						//printf("invoke votecount\n");
-						recv_len = recv(new_sockfd, buffer, BUF_SIZE, 0);
-						check_recv(recv_len, buffer);
-						//printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
-						votecount(&chead, buffer, response);
+						votecount(&chead, buffer+1, response);
 						send_resp(&new_sockfd, response, strlen(response));
 						break;
 					case '7':
 						//printf("invoke viewresult\n");
-						recv_len = recv(new_sockfd, buffer, BUF_SIZE, 0);
-						check_recv(recv_len, buffer);
-						//printf("\"%s\" receieved, length: %d.\n", buffer, recv_len);
-						viewresult(buffer, &chead, username, pwd, response);
+						viewresult(buffer+1, &chead, username, pwd, response);
 						send_resp(&new_sockfd, response, strlen(response));			
 						if(strcmp(response,"UNAUTHORIZED") != 0){
 							shutdown = 1;
@@ -212,8 +194,8 @@ int main (int argc, char *argv[])
 						}
 						break;
 					default:
-						//printf("illegal identifier.\n");
-						strcpy(response, "illegal identifier");
+						//server receives message body from change password client
+						strcpy(response, changepassword(buffer, username, pwd));
 						send_resp(&new_sockfd, response, strlen(response));
 						break;
 				}

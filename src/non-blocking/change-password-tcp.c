@@ -59,20 +59,43 @@ int main (int argc, char *argv[])
 		exit(1);
 	}
 	printf("Client connects to local address and port number.\n");
-
-	printf("Please enter username, your old password and the new password:\n");
-	if(fgets(buffer, 256, stdin)<0){
-		error("scanf::");
-	}
-	buffer[strlen(buffer)-1] = '\0';
 	
 	//send identifier first
 	send_len = send(sockfd, msg, strlen(msg), 0);
 	if(send_len < 0){
 		error("send identifier ::");
 	}
-	printf("identifier \"%s\" has been sent, length: %d\n", msg, send_len );
+	close(sockfd);
+	//printf("identifier \"%s\" has been sent, length: %d\n", msg, send_len );
 	
+	printf("Please enter username, your old password and the new password:\n");
+	if(fgets(buffer, 256, stdin)<0){
+		error("scanf::");
+	}
+	buffer[strlen(buffer)-1] = '\0';
+	if ((status = getaddrinfo(serv_addr, port_num, &hints, &servinfo))!= 0){
+		error(gai_strerror(status));
+	}
+
+	for(res = servinfo; res != NULL; res = res->ai_next){
+		if((sockfd = socket(PF_INET, res->ai_socktype, res->ai_protocol))<0){
+			error("simplex-talk: socket");
+		}
+		if(connect(sockfd, res->ai_addr, res->ai_addrlen) < 0){
+			close(sockfd);			
+			perror("simplex-talk: connect");
+			continue;
+		}
+		break; //when the connect succeeds for the first time, exit the loop
+	}
+	freeaddrinfo(servinfo); //finish checking the linked list returned from getaddrinfo()
+	
+	if(res == NULL){
+		fprintf(stderr, "client: failed to connect.\n");
+		exit(1);
+	}
+	printf("Client connects to local address and port number.\n");
+
 	//send data body next
 	send_len = send(sockfd, buffer, strlen(buffer), 0);
 	if(send_len < 0){
